@@ -22,6 +22,7 @@ public class CustomerLevelService {
         return list;
     }
 
+    // TEST
     public Boolean updateConfig(List<CustomerLevelController.RateInfo> rateInfoArr){
         boolean updateFinished = true;
         for(CustomerLevelController.RateInfo rateInfo : rateInfoArr){
