@@ -1,0 +1,45 @@
+# Spring properties
+spring:
+  application:
+    name: InvoiceCommissionService
+  datasource:
+    driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver
+
+    #Test
+    #url: jdbc:sqlserver://localhost:1433;databaseName=intrafisher;
+    #username: powers
+    #password: machines
+
+    #Bridgeview
+    #url: jdbc:sqlserver://appserverdb:1433;databaseName=intrafisher;encrypt=true;trustServerCertificate=true;
+    #username: powers
+    #password: machines
+
+    #dev1
+    url: jdbc:sqlserver://fisherdev2:1433;databaseName=intrafisher;encrypt=true;trustServerCertificate=true;
+    username: sa
+    password: Blu3=Marlin
+
+    #dev2
+    #url: jdbc:sqlserver://fisherdev:1433;databaseName=intrafisher;encrypt=true;trustServerCertificate=true;
+    #username: powers
+    #password: machines
+
+    #Bedford Park
+    #url: jdbc:sqlserver://10.2.14.71:1433;databaseName=intrafisher;
+    #username: sa
+    #password: Nickel1531
+  jpa:
+    show-sql: false
+    hibernate:
+      ddl-auto: update
+    database-platform: org.hibernate.dialect.SQLServer2012Dialect
+  sql:
+    init:
+      platform: mssql
+
+# HTTP Server
+server:
+  port: 1118   # HTTP (Tomcat) port
+  servlet:
+    context-path: /invoiceCommissionService
