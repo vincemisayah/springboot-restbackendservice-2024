@@ -389,7 +389,7 @@ public class CustomerLevelDao {
 
 
 
-    public record CustomerAndJobInfo(int customerID, String customerName, int jobID, String jobName, int invoiceID){ }
+    public record CustomerAndJobInfo(int customerID, String arNumber,String customerName, int jobID, String jobName, int invoiceID){ }
     public CustomerAndJobInfo getCustomerAndJobInfo(int invoiceID) {
         CustomerAndJobInfo customerAndJobInfo = null;
 
@@ -398,6 +398,7 @@ public class CustomerLevelDao {
                     
                     SELECT
                         customer as customerId,
+                        t3.ARnumber,
                         t3.name as customerName,
                         job as jobId,
                         t2.name as jobName,
@@ -414,11 +415,12 @@ public class CustomerLevelDao {
         List<Map<String, Object>> rows = template.queryForList(sql, parameters);
         for (Map<String, Object> row : rows) {
             int customerId = (int) row.get("customerId");
+            String arNumber = (String) row.get("arNumber");
             String customerName = (String) row.get("customerName");
             int jobId = (int) row.get("jobId");
             String jobName = (String) row.get("jobName");
             int invoiceId = (int) row.get("invoiceId");
-            customerAndJobInfo = new CustomerAndJobInfo(customerId, customerName, jobId, jobName, invoiceId);
+            customerAndJobInfo = new CustomerAndJobInfo(customerId, arNumber, customerName, jobId, jobName, invoiceId);
 
         }
         return customerAndJobInfo;
