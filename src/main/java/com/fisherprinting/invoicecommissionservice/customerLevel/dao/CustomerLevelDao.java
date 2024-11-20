@@ -112,7 +112,7 @@ public class CustomerLevelDao {
                     T2.id as id,
                     T2.name as department
                 FROM [intrafisher].[dbo].[invTasks] as T1
-                    INNER JOIN departments as T2 on T1.dept = T2.id
+                    INNER JOIN [intrafisher].[dbo].[invDepts] as T2 on T1.dept = T2.id
                 WHERE isActive <> 0
                 ORDER BY T2.name ASC""";
 
@@ -144,7 +144,7 @@ public class CustomerLevelDao {
                             ELSE T1.defaultDescription
                         END as description
                     FROM [intrafisher].[dbo].[invTasks] as T1
-                        INNER JOIN departments as T2 on T1.dept = T2.id
+                        INNER JOIN [intrafisher].[dbo].[invDepts] as T2 on T1.dept = T2.id
                     WHERE isActive <> 0
                     ORDER BY T2.name, T1.name ASC
                 """;
@@ -424,5 +424,71 @@ public class CustomerLevelDao {
 
         }
         return customerAndJobInfo;
+    }
+
+    public record EmployeeTaskRateInfo(BigDecimal commRate, String assignedBy, String notes){ }
+    public EmployeeTaskRateInfo getEmployeeTaskRateInfo(int customerID, int empID, int taskID) {
+        EmployeeTaskRateInfo taskRateInfo = null;
+
+        String sql = """
+                    DECLARE @CUSTOMER_ID INT = :customerID
+                    DECLARE @EMP_ID INT = :empID
+                    DECLARE @TASK_ID INT = :taskID
+                    
+                    SELECT [assignedRate]
+                          ,employees.firstName + ' ' + employees.lastName as assignedBy
+                          ,[notes]
+                      FROM [intrafisher].[dbo].[InvComm_EmpAssignedRates_CustomerLevel]
+                        INNER JOIN employees ON employees.id = assignedBy
+                      WHERE [customerID] = @CUSTOMER_ID
+                        AND [taskID] = @TASK_ID
+                        AND [empID] = @EMP_ID
+                    """;
+
+        MapSqlParameterSource parameters = new MapSqlParameterSource();
+        parameters.addValue("customerID", customerID);
+        parameters.addValue("empID", empID);
+        parameters.addValue("taskID", taskID);
+
+        List<Map<String, Object>> rows = template.queryForList(sql, parameters);
+        for (Map<String, Object> row : rows) {
+            BigDecimal assignedRate = (BigDecimal) row.get("assignedRate");
+            String assignedBy = (String) row.get("assignedBy");
+            String notes = (String) row.get("notes");
+            taskRateInfo = new EmployeeTaskRateInfo(assignedRate, assignedBy, notes);
+        }
+        return taskRateInfo;
+    }
+
+    public record TaskRateInfo(BigDecimal commRate, String assignedBy, String notes){ }
+    public TaskRateInfo getTaskRateInfo(int customerID, int empID, int taskID) {
+        TaskRateInfo taskRateInfo = null;
+
+        String sql = """
+                    DECLARE @CUSTOMER_ID INT = :customerID
+                    DECLARE @TASK_ID INT = :taskID
+                    
+                    
+                    SELECT [commRate]
+                          , employees.firstName + ' ' + employees.lastName as assignedBy
+                          ,[notes]
+                      FROM [intrafisher].[dbo].[InvComm_Config_CustomerLevel]
+                        INNER JOIN employees ON employees.id = assignedBy
+                      WHERE [customerID] = @CUSTOMER_ID
+                        AND [taskID] = @TASK_ID
+                    """;
+
+        MapSqlParameterSource parameters = new MapSqlParameterSource();
+        parameters.addValue("customerID", customerID);
+        parameters.addValue("taskID", taskID);
+
+        List<Map<String, Object>> rows = template.queryForList(sql, parameters);
+        for (Map<String, Object> row : rows) {
+            BigDecimal commRate = (BigDecimal) row.get("commRate");
+            String assignedBy = (String) row.get("assignedBy");
+            String notes = (String) row.get("notes");
+            taskRateInfo = new TaskRateInfo(commRate, assignedBy, notes);
+        }
+        return taskRateInfo;
     }
 }

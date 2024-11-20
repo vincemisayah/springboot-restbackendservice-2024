@@ -2,10 +2,13 @@ package com.fisherprinting.invoicecommissionservice.customerLevel.service;
 
 import com.fisherprinting.invoicecommissionservice.customerLevel.controller.CustomerLevelController;
 import com.fisherprinting.invoicecommissionservice.customerLevel.dao.CustomerLevelDao;
+import com.fisherprinting.invoicecommissionservice.customerLevel.model.CustomerInfo;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.MathContext;
+import java.math.RoundingMode;
 import java.util.List;
 
 @Service
@@ -53,5 +56,48 @@ public class CustomerLevelService {
             }
         }
         return  updateFinished;
+    }
+
+    public CustomerInfo getCustomerInfoByInvoiceId(int invoiceId) {
+        CustomerLevelDao.CustomerAndJobInfo customerAndJobInfo = customerLevelDao.getCustomerAndJobInfo(invoiceId);
+        return customerLevelDao.getSalesPersonListById(customerAndJobInfo.customerID( ));
+    }
+
+    public record CustomerLevelCalculatedCommissionInfo(
+            BigDecimal amount,
+            BigDecimal taskRate,
+            BigDecimal taskCommissionDollarValue,
+            BigDecimal salesPersonAssignedRate,
+            BigDecimal salesDollarValue){ }
+    public CustomerLevelCalculatedCommissionInfo calculateInvoiceTaskCommission(int customerID, int invoiceID, int taskID, int orderNumber, int employeeID){
+        List<CustomerLevelDao.InvoiceChargedTaskItem> invoiceChargedTaskItems = customerLevelDao.getInvoiceChargedItems(invoiceID);
+        invoiceChargedTaskItems.removeIf(n->n.order() != orderNumber);
+        CustomerLevelDao.InvoiceChargedTaskItem invoiceItem = invoiceChargedTaskItems.getFirst();
+
+        // 1 Invoice Task total amount
+        BigDecimal amount = invoiceItem.amount();
+
+        // 2 Task Rate Info
+        CustomerLevelDao.TaskRateInfo taskRateInfo = customerLevelDao.getTaskRateInfo(customerID, employeeID, taskID);
+        BigDecimal taskRate = taskRateInfo.commRate();
+
+        // 3 Calculated Task Commission Dollar Value
+        // Set precision to 5
+        int scale = 4;
+        BigDecimal rhs = taskRate.divide(new BigDecimal(100), scale, RoundingMode.CEILING);
+        BigDecimal taskCommissionValue = amount.multiply(rhs);
+
+        // 4 Salesperson assigned rate info
+        CustomerLevelDao.EmployeeTaskRateInfo salesPersonAssignedRateInfo = customerLevelDao.getEmployeeTaskRateInfo(customerID, employeeID, taskID);
+        BigDecimal salesPersonAssignedRate = salesPersonAssignedRateInfo.commRate();
+
+        // 5 Calculated Sales Commission Dollar Value
+        BigDecimal salesCommissionValue = taskCommissionValue.multiply(salesPersonAssignedRate.divide(new BigDecimal(100), scale, RoundingMode.CEILING));
+
+        return new CustomerLevelCalculatedCommissionInfo(amount.setScale(2, RoundingMode.CEILING),
+                taskRate.setScale(2, RoundingMode.CEILING),
+                taskCommissionValue.setScale(2, RoundingMode.CEILING),
+                salesPersonAssignedRate.setScale(2, RoundingMode.CEILING),
+                salesCommissionValue.setScale(2, RoundingMode.CEILING));
     }
 }

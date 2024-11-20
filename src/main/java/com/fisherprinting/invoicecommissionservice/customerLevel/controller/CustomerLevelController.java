@@ -70,21 +70,29 @@ public class CustomerLevelController {
         return this.customerLevelDao.getCustomerAndJobInfo(invoiceId);
     }
 
+    @GetMapping("/customerInfo")
+    public CustomerInfo getCustomerInfo(@RequestParam("invoiceId") int invoiceId) {
+        return this.customerLevelService.getCustomerInfoByInvoiceId(invoiceId);
+    }
 
     public record SalesAssignedRates(int empId, BigDecimal assignedRate, String salesNote) {}
     public record RateInfo(int customerID, int taskId, BigDecimal taskRate, String taskNote, int lastEditBy, List<SalesAssignedRates> salesAssignedRates) {}
     @PostMapping("/saveCustomerLevelConfig")
     public ResponseEntity<String> saveConfig(@RequestBody List<RateInfo> rateInfoArr) {
-//        try {
-//            Thread.sleep(3000); // 5000 milliseconds = 5 seconds
-//            System.out.println("Done!");
-//        } catch (InterruptedException e) {
-//            // Handle the interruption if necessary
-//            System.err.println("Interrupted: " + e.getMessage());
-//        }
         if(customerLevelService.updateConfig(rateInfoArr))
-            return new ResponseEntity<String>(HttpStatus.OK);
-        return new ResponseEntity<String>(HttpStatus.EXPECTATION_FAILED);
+            return new ResponseEntity<>(HttpStatus.OK);
+        return new ResponseEntity<>(HttpStatus.EXPECTATION_FAILED);
+    }
+
+    // Currently at Customer Level only
+    @GetMapping("/calculatedInvoiceTaskCommission")
+    public CustomerLevelService.CustomerLevelCalculatedCommissionInfo
+        calculateInvoiceTaskCommission(@RequestParam("customerID")int customerID,
+                                       @RequestParam("invoiceID")int invoiceID,
+                                       @RequestParam("taskID")int taskID,
+                                       @RequestParam("orderNumber")int orderNumber,
+                                       @RequestParam("employeeID")int employeeID) {
+        return this.customerLevelService.calculateInvoiceTaskCommission(customerID, invoiceID, taskID, orderNumber, employeeID);
     }
 
 //    @MessageMapping("/upload")
