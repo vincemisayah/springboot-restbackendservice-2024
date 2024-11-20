@@ -60,6 +60,16 @@ public class CustomerLevelController {
         return this.customerLevelDao.getSalesPersonAssignedRateMapperList(customerID);
     }
 
+    @GetMapping("/invoiceChargedTaskItems")
+    public List<CustomerLevelDao.InvoiceChargedTaskItem> getInvoiceList(@RequestParam("invoiceId") int invoiceId) {
+        return this.customerLevelDao.getInvoiceChargedItems(invoiceId);
+    }
+
+    @GetMapping("/customerAndJobInfo")
+    public CustomerLevelDao.CustomerAndJobInfo getCustomerAndJobInfo(@RequestParam("invoiceId") int invoiceId) {
+        return this.customerLevelDao.getCustomerAndJobInfo(invoiceId);
+    }
+
 
     public record SalesAssignedRates(int empId, BigDecimal assignedRate, String salesNote) {}
     public record RateInfo(int customerID, int taskId, BigDecimal taskRate, String taskNote, int lastEditBy, List<SalesAssignedRates> salesAssignedRates) {}

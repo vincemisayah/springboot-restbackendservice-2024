@@ -21,24 +21,28 @@ public class CustomerLevelDao {
         this.template = template;
     }
 
-    public CustomerInfo getSalesPersonListById(Integer customerId) {
+    public CustomerInfo getSalesPersonListById(Integer customerID) {
         CustomerInfo ci = null;
-        String sql = "DECLARE @customerId INT = " + customerId + " \r\n"
-                + "\r\n"
-                + "SELECT \r\n"
-                + "	 [id] ,[ARnumber] ,[name] \r\n"
-                + "	,[salesman] s1Id, [salesperson2] s2Id, [salesperson3] s3Id, [salesperson4] s4Id \r\n"
-                + "	,(SELECT lastName + ', ' + firstName FROM employees where id = [salesman])     as s1Name \r\n"
-                + "	,(SELECT lastName + ', ' + firstName FROM employees where id = [salesperson2]) as s2Name \r\n"
-                + "	,(SELECT lastName + ', ' + firstName FROM employees where id = [salesperson3]) as s3Name \r\n"
-                + "	,(SELECT lastName + ', ' + firstName FROM employees where id = [salesperson4]) as s4Name \r\n"
-                + "FROM \r\n"
-                + "	[intrafisher].[dbo].[customers] \r\n"
-                + "WHERE \r\n"
-                + "	id = @customerId";
 
-        SqlParameterSource namedParameters = null;
-        List<Map<String, Object>> rows = template.queryForList(sql, namedParameters);
+        String sql = """
+                DECLARE @customerId INT = :customerID
+                
+                SELECT
+                	 [id] ,[ARnumber] ,[name]
+                	,[salesman] s1Id, [salesperson2] s2Id, [salesperson3] s3Id, [salesperson4] s4Id
+                	,(SELECT lastName + ', ' + firstName FROM employees where id = [salesman])     as s1Name
+                	,(SELECT lastName + ', ' + firstName FROM employees where id = [salesperson2]) as s2Name
+                	,(SELECT lastName + ', ' + firstName FROM employees where id = [salesperson3]) as s3Name
+                	,(SELECT lastName + ', ' + firstName FROM employees where id = [salesperson4]) as s4Name
+                FROM
+                	[intrafisher].[dbo].[customers]
+                WHERE
+                	id = @customerId
+                """;
+
+        MapSqlParameterSource parameters = new MapSqlParameterSource();
+        parameters.addValue("customerID", customerID);
+        List<Map<String, Object>> rows = template.queryForList(sql, parameters);
 
         for (Map<String, Object> row : rows) {
             int id = (int) row.get("id");
@@ -70,7 +74,6 @@ public class CustomerLevelDao {
                 li.add(new SalesPerson(s4, s4Name));
 
             ci = new CustomerInfo(id, name, arNumber, li);
-
         }
         return ci;
     }
@@ -317,5 +320,107 @@ public class CustomerLevelDao {
         numberOfRowsAffected = template.update(sql, parameters);
 
         return numberOfRowsAffected;
+    }
+
+    public record InvoiceChargedTaskItem(
+            int order,
+            int deptId,
+            String deptName,
+            int taskId,
+            String taskName,
+            String description,
+            Double qty,
+            BigDecimal cost,
+            BigDecimal amount
+    ) { }
+    public List<InvoiceChargedTaskItem> getInvoiceChargedItems(int invoiceId) {
+        List<InvoiceChargedTaskItem> list = new ArrayList<InvoiceChargedTaskItem>( );
+
+        String sql = """
+                    DECLARE @invoiceId as int = :invoiceId
+                    
+                    SELECT
+                        [order],
+                        t2.id as deptId,
+                        t2.name as deptName,
+                        [task] as taskId,
+                        t1.name as taskName,
+                        [desc] as description,
+                        [quantity] as qty,
+                        CONVERT(decimal(18,2),[cost], 2) as cost,
+                        -- Determines the amount based on 'per thousand' or '%'
+                        CASE
+                            WHEN t1.unitName = '%'
+                                THEN CONVERT(decimal(18,2),([quantity] * cost)/100, 2)
+                            WHEN t1.chargePerM > 0 OR t1.unitName like '%PM%'
+                                THEN CONVERT(decimal(18,2),([quantity] * cost)/1000, 2)
+                                ELSE CONVERT(decimal(18,2),([quantity] * cost), 2)
+                        END as amount
+                    FROM [intrafisher].[dbo].[invoiceItems]
+                        INNER JOIN [intrafisher].[dbo].[invTasks] as t1 on [task] = t1.id
+                        INNER JOIN [intrafisher].[dbo].[invDepts] as t2 on t1.dept = t2.id
+                    
+                    WHERE [invoice] = @invoiceId
+                    ORDER BY [order] ASC
+                    """;
+
+        MapSqlParameterSource parameters = new MapSqlParameterSource();
+        parameters.addValue("invoiceId", invoiceId);
+
+        List<Map<String, Object>> rows = template.queryForList(sql, parameters);
+        for (Map<String, Object> row : rows) {
+
+            int order = (int) row.get("order");
+            int deptId = (int) row.get("deptId");
+            String deptName = (String) row.get("deptName");
+            int taskId = (int) row.get("taskId");
+            String taskName = (String) row.get("taskName");
+            String description = (String) row.get("description");
+            Double qty = (Double) row.get("qty");
+            BigDecimal cost = (BigDecimal) row.get("cost");
+            BigDecimal amount = (BigDecimal) row.get("amount");
+
+            InvoiceChargedTaskItem invoiceItem = new InvoiceChargedTaskItem(order, deptId, deptName, taskId, taskName, description, qty, cost, amount);
+
+            list.add(invoiceItem);
+        }
+        return list;
+    }
+
+
+
+    public record CustomerAndJobInfo(int customerID, String customerName, int jobID, String jobName, int invoiceID){ }
+    public CustomerAndJobInfo getCustomerAndJobInfo(int invoiceID) {
+        CustomerAndJobInfo customerAndJobInfo = null;
+
+        String sql = """
+                    DECLARE @invoiceId int = :invoiceID
+                    
+                    SELECT
+                        customer as customerId,
+                        t3.name as customerName,
+                        job as jobId,
+                        t2.name as jobName,
+                        t1.id as invoiceId
+                    FROM [intrafisher].[dbo].[invoices] as t1
+                        INNER JOIN jobs as t2 on t1.job = t2.id
+                        INNER JOIN customers as t3 on t1.customer = t3.id
+                    WHERE t1.id = @invoiceId
+                    """;
+
+        MapSqlParameterSource parameters = new MapSqlParameterSource();
+        parameters.addValue("invoiceID", invoiceID);
+
+        List<Map<String, Object>> rows = template.queryForList(sql, parameters);
+        for (Map<String, Object> row : rows) {
+            int customerId = (int) row.get("customerId");
+            String customerName = (String) row.get("customerName");
+            int jobId = (int) row.get("jobId");
+            String jobName = (String) row.get("jobName");
+            int invoiceId = (int) row.get("invoiceId");
+            customerAndJobInfo = new CustomerAndJobInfo(customerId, customerName, jobId, jobName, invoiceId);
+
+        }
+        return customerAndJobInfo;
     }
 }
