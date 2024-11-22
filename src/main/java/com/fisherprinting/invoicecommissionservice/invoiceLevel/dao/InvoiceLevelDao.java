@@ -119,6 +119,7 @@ public class InvoiceLevelDao {
                                    @NOTES)
                         END
                     """;
+
         MapSqlParameterSource parameters = new MapSqlParameterSource();
         parameters.addValue("invoiceID", config.invoiceID());
         parameters.addValue("taskID", config.taskID());
