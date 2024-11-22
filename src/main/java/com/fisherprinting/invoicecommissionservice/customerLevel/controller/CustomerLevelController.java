@@ -19,6 +19,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.TimeUnit;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -76,9 +77,15 @@ public class CustomerLevelController {
     }
 
     public record SalesAssignedRates(int empId, BigDecimal assignedRate, String salesNote) {}
-    public record RateInfo(int customerID, int taskId, BigDecimal taskRate, String taskNote, int lastEditBy, List<SalesAssignedRates> salesAssignedRates) {}
+    public record RateInfo(
+            int customerID,
+            int taskId,
+            BigDecimal taskRate,
+            String taskNote,
+            int lastEditBy,
+            List<SalesAssignedRates> salesAssignedRates) {}
     @PostMapping("/saveCustomerLevelConfig")
-    public ResponseEntity<String> saveConfig(@RequestBody List<RateInfo> rateInfoArr) {
+    public ResponseEntity<String> saveCustomerLevelConfig(@RequestBody List<RateInfo> rateInfoArr) {
         if(customerLevelService.updateConfig(rateInfoArr))
             return new ResponseEntity<>(HttpStatus.OK);
         return new ResponseEntity<>(HttpStatus.EXPECTATION_FAILED);
@@ -94,6 +101,8 @@ public class CustomerLevelController {
                                        @RequestParam("employeeID")int employeeID) {
         return this.customerLevelService.calculateInvoiceTaskCommission(customerID, invoiceID, taskID, orderNumber, employeeID);
     }
+
+
 
 //    @MessageMapping("/upload")
 //    public void handleUpload(@Payload List<Object> jsonArray) {

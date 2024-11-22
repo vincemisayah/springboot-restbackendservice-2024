@@ -25,7 +25,6 @@ public class CustomerLevelService {
         return list;
     }
 
-    // TEST
     public Boolean updateConfig(List<CustomerLevelController.RateInfo> rateInfoArr){
         boolean updateFinished = true;
         for(CustomerLevelController.RateInfo rateInfo : rateInfoArr){
@@ -68,7 +67,10 @@ public class CustomerLevelService {
             BigDecimal taskRate,
             BigDecimal taskCommissionDollarValue,
             BigDecimal salesPersonAssignedRate,
-            BigDecimal salesDollarValue){ }
+            BigDecimal salesDollarValue,
+            String taskRateNote,
+            String salesPersonAssignedRateNote,
+            String assignedBy){ }
     public CustomerLevelCalculatedCommissionInfo calculateInvoiceTaskCommission(int customerID, int invoiceID, int taskID, int orderNumber, int employeeID){
         List<CustomerLevelDao.InvoiceChargedTaskItem> invoiceChargedTaskItems = customerLevelDao.getInvoiceChargedItems(invoiceID);
         invoiceChargedTaskItems.removeIf(n->n.order() != orderNumber);
@@ -82,7 +84,6 @@ public class CustomerLevelService {
         BigDecimal taskRate = taskRateInfo.commRate();
 
         // 3 Calculated Task Commission Dollar Value
-        // Set precision to 5
         int scale = 4;
         BigDecimal rhs = taskRate.divide(new BigDecimal(100), scale, RoundingMode.CEILING);
         BigDecimal taskCommissionValue = amount.multiply(rhs);
@@ -98,6 +99,9 @@ public class CustomerLevelService {
                 taskRate.setScale(2, RoundingMode.CEILING),
                 taskCommissionValue.setScale(2, RoundingMode.CEILING),
                 salesPersonAssignedRate.setScale(2, RoundingMode.CEILING),
-                salesCommissionValue.setScale(2, RoundingMode.CEILING));
+                salesCommissionValue.setScale(2, RoundingMode.CEILING),
+                taskRateInfo.notes(),
+                salesPersonAssignedRateInfo.notes(),
+                taskRateInfo.assignedBy());
     }
 }

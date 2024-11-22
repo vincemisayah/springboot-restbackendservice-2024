@@ -82,13 +82,13 @@ public class CustomerLevelDao {
         List<CustomerInfo> list = new ArrayList<CustomerInfo>( );
 
         String sql = """
-                DECLARE @AR_NUMBER VARCHAR(25) = :arNumber \r
-                DECLARE @CUSTOMER_STATUS_ACTIVE INT = 10 \r
-                SELECT TOP(200)  [id] as customerId  \r
-                FROM customers           \r
-                WHERE                    \r
-                		[ARnumber] LIKE TRIM(@AR_NUMBER) + '%'  \r
-                		AND [status] = @CUSTOMER_STATUS_ACTIVE  \r
+                DECLARE @AR_NUMBER VARCHAR(25) = :arNumber
+                DECLARE @CUSTOMER_STATUS_ACTIVE INT = 10
+                SELECT TOP(200)  [id] as customerId
+                FROM customers
+                WHERE
+                		[ARnumber] LIKE TRIM(@AR_NUMBER) + '%'
+                		AND [status] = @CUSTOMER_STATUS_ACTIVE
                 ORDER BY [ARnumber] ASC""";
 
         MapSqlParameterSource parameters = new MapSqlParameterSource();
