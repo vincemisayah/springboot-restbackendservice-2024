@@ -4,6 +4,7 @@ import com.fisherprinting.invoicecommissionservice.customerLevel.dao.CustomerLev
 import com.fisherprinting.invoicecommissionservice.customerLevel.model.CustomerInfo;
 import com.fisherprinting.invoicecommissionservice.customerLevel.model.SalesPerson;
 import com.fisherprinting.invoicecommissionservice.customerLevel.service.CustomerLevelService;
+import com.fisherprinting.invoicecommissionservice.invoiceLevel.service.InvoiceLevelService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -56,15 +57,25 @@ public class CustomerLevelController {
         return this.customerLevelDao.getCustomerLevelTaskRatesList(customerID);
     }
 
-    @GetMapping("/customerEmployeeAssignedRates")
+    @GetMapping("/employeeAssignedRates")
     public List<CustomerLevelDao.SalesPersonAssignedRateMapper> getSalesPersonAssignedRateMapperList(@RequestParam("customerID") int customerID){
         return this.customerLevelDao.getSalesPersonAssignedRateMapperList(customerID);
     }
 
-    @GetMapping("/invoiceChargedTaskItems")
-    public List<CustomerLevelDao.InvoiceChargedTaskItem> getInvoiceList(@RequestParam("invoiceId") int invoiceId) {
-        return this.customerLevelDao.getInvoiceChargedItems(invoiceId);
-    }
+//    @GetMapping("/calculatedInvoiceTaskCommission")
+//    public CustomerLevelService.CustomerLevelCalculatedCommissionInfo
+//    calculateInvoiceTaskCommission(@RequestParam("customerID")int customerID,
+//                                   @RequestParam("invoiceID")int invoiceID,
+//                                   @RequestParam("taskID")int taskID,
+//                                   @RequestParam("orderNumber")int orderNumber,
+//                                   @RequestParam("employeeID")int employeeID) {
+//        return customerLevelService.calculateInvoiceTaskCommission(customerID, invoiceID, taskID, orderNumber, employeeID);
+//    }
+
+//    @GetMapping("/invoiceChargedTaskItems")
+//    public List<CustomerLevelDao.InvoiceChargedTaskItem> getInvoiceList(@RequestParam("invoiceId") int invoiceId) {
+//        return this.customerLevelDao.getInvoiceChargedItems(invoiceId);
+//    }
 
     @GetMapping("/customerAndJobInfo")
     public CustomerLevelDao.CustomerAndJobInfo getCustomerAndJobInfo(@RequestParam("invoiceId") int invoiceId) {
@@ -91,7 +102,7 @@ public class CustomerLevelController {
         return new ResponseEntity<>(HttpStatus.EXPECTATION_FAILED);
     }
 
-    // Currently at Customer Level only
+//    // Currently at Customer Level only
     @GetMapping("/calculatedInvoiceTaskCommission")
     public CustomerLevelService.CustomerLevelCalculatedCommissionInfo
         calculateInvoiceTaskCommission(@RequestParam("customerID")int customerID,

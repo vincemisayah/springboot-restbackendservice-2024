@@ -20,6 +20,72 @@ public class InvoiceLevelDao {
         this.template = template;
     }
 
+
+    public record InvoiceChargedTaskItem(
+            int order,
+            int deptId,
+            String deptName,
+            int taskId,
+            String taskName,
+            String description,
+            Double qty,
+            BigDecimal cost,
+            BigDecimal amount
+    ) { }
+    public List<InvoiceChargedTaskItem> getInvoiceChargedItems(int invoiceId) {
+        List<InvoiceChargedTaskItem> list = new ArrayList<InvoiceChargedTaskItem>( );
+
+        String sql = """
+                    DECLARE @invoiceId as int = :invoiceId
+                    
+                    SELECT
+                        [order],
+                        t2.id as deptId,
+                        t2.name as deptName,
+                        [task] as taskId,
+                        t1.name as taskName,
+                        [desc] as description,
+                        [quantity] as qty,
+                        CONVERT(decimal(18,2),[cost], 2) as cost,
+                        -- Determines the amount based on 'per thousand' or '%'
+                        CASE
+                            WHEN t1.unitName = '%'
+                                THEN CONVERT(decimal(18,2),([quantity] * cost)/100, 2)
+                            WHEN t1.chargePerM > 0 OR t1.unitName like '%PM%'
+                                THEN CONVERT(decimal(18,2),([quantity] * cost)/1000, 2)
+                                ELSE CONVERT(decimal(18,2),([quantity] * cost), 2)
+                        END as amount
+                    FROM [intrafisher].[dbo].[invoiceItems]
+                        INNER JOIN [intrafisher].[dbo].[invTasks] as t1 on [task] = t1.id
+                        INNER JOIN [intrafisher].[dbo].[invDepts] as t2 on t1.dept = t2.id
+                    
+                    WHERE [invoice] = @invoiceId
+                    ORDER BY [order] ASC
+                    """;
+
+        MapSqlParameterSource parameters = new MapSqlParameterSource();
+        parameters.addValue("invoiceId", invoiceId);
+
+        List<Map<String, Object>> rows = template.queryForList(sql, parameters);
+        for (Map<String, Object> row : rows) {
+
+            int order = (int) row.get("order");
+            int deptId = (int) row.get("deptId");
+            String deptName = (String) row.get("deptName");
+            int taskId = (int) row.get("taskId");
+            String taskName = (String) row.get("taskName");
+            String description = (String) row.get("description");
+            Double qty = (Double) row.get("qty");
+            BigDecimal cost = (BigDecimal) row.get("cost");
+            BigDecimal amount = (BigDecimal) row.get("amount");
+
+            InvoiceChargedTaskItem invoiceItem = new InvoiceChargedTaskItem(order, deptId, deptName, taskId, taskName, description, qty, cost, amount);
+
+            list.add(invoiceItem);
+        }
+        return list;
+    }
+
     public int saveTaskConfig(InvoiceLevelController.InvoiceLevelConfig config) throws DataAccessException{
         int rowsAffected = 0;
 
@@ -166,7 +232,7 @@ public class InvoiceLevelDao {
     }
 
     public record TaskRateInfo(BigDecimal commRate, String assignedBy, String notes){ }
-    public TaskRateInfo getTaskRateInfo(int invoiceID, int empID, int taskID){
+    public TaskRateInfo getTaskRateInfo(int invoiceID, int taskID){
         TaskRateInfo taskRateInfo = null;
 
         String sql = """
@@ -194,5 +260,42 @@ public class InvoiceLevelDao {
             taskRateInfo = new TaskRateInfo(taskRate, assignedBy, taskNote);
         }
         return taskRateInfo;
+    }
+
+    public record InvoiceTaskItem(int taskID, String taskName, int deptID, String deptName, String description){ }
+    public List<InvoiceTaskItem> getDistinctChargedInvoiceTaskItems(int invoiceID) {
+        List<InvoiceTaskItem> list = new ArrayList<>();
+
+        String sql = """
+                    DECLARE @invoiceId as int = :invoiceID
+                    
+                    SELECT DISTINCT
+                        [task] as taskId,
+                        t1.name as taskName,
+                        t2.id as deptId,
+                        t2.name as deptName,
+                        [desc] as description
+                    
+                    FROM [intrafisher].[dbo].[invoiceItems]
+                        INNER JOIN [intrafisher].[dbo].[invTasks] as t1 on [task] = t1.id
+                        INNER JOIN [intrafisher].[dbo].[invDepts] as t2 on t1.dept = t2.id
+                    WHERE [invoice] = @invoiceId
+                    """;
+
+        MapSqlParameterSource parameters = new MapSqlParameterSource();
+        parameters.addValue("invoiceID", invoiceID);
+
+        List<Map<String, Object>> rows = template.queryForList(sql, parameters);
+        for (Map<String, Object> row : rows) {
+            int taskId = (int) row.get("taskId");
+            String taskName = (String) row.get("taskName");
+            int deptId = (int) row.get("deptId");
+            String deptName = (String) row.get("deptName");
+            String description = (String) row.get("description");
+
+            InvoiceTaskItem invoiceTaskItem = new InvoiceTaskItem(taskId, taskName, deptId, deptName, description);
+            list.add(invoiceTaskItem);
+        }
+        return list;
     }
 }
