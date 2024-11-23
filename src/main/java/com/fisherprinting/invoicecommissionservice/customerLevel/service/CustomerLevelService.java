@@ -80,7 +80,7 @@ public class CustomerLevelService {
         BigDecimal amount = invoiceItem.amount();
 
         // 2 Task Rate Info
-        CustomerLevelDao.TaskRateInfo taskRateInfo = customerLevelDao.getTaskRateInfo(customerID, employeeID, taskID);
+        CustomerLevelDao.TaskRateInfo taskRateInfo = customerLevelDao.getTaskRateInfo(customerID, taskID);
         BigDecimal taskRate = taskRateInfo.commRate();
 
         // 3 Calculated Task Commission Dollar Value

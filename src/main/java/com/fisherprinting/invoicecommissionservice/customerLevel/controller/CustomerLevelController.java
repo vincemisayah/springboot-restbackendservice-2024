@@ -113,6 +113,10 @@ public class CustomerLevelController {
         return this.customerLevelService.calculateInvoiceTaskCommission(customerID, invoiceID, taskID, orderNumber, employeeID);
     }
 
+    @GetMapping("/taskRateInfo")
+    public CustomerLevelDao.TaskRateInfo getTaskRateInfo(@RequestParam("customerID") int customerID, @RequestParam("taskID") int taskID) {
+        return customerLevelDao.getTaskRateInfo(customerID, taskID);
+    }
 
 
 //    @MessageMapping("/upload")

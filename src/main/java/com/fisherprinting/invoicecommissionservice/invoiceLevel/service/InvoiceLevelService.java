@@ -35,7 +35,8 @@ public class InvoiceLevelService {
 
         // 2 Task Rate Info
         InvoiceLevelDao.TaskRateInfo taskRateInfo = invoiceLevelDao.getTaskRateInfo(invoiceID, taskID);
-        BigDecimal taskRate = taskRateInfo.commRate();
+        BigDecimal taskRate = (taskRateInfo != null)? taskRateInfo.commRate(): BigDecimal.ZERO;
+        String taskNotes =(taskRateInfo != null) ? taskRateInfo.notes():"";
 
         // 3 Calculated Task Commission Dollar Value
         int scale = 4;
@@ -44,10 +45,13 @@ public class InvoiceLevelService {
 
         // 4 Salesperson assigned rate info
         InvoiceLevelDao.EmployeeTaskRateInfo salesPersonAssignedRateInfo = invoiceLevelDao.getEmployeeTaskRateInfo(invoiceID, employeeID, taskID);
-        BigDecimal salesPersonAssignedRate = salesPersonAssignedRateInfo.commRate();
+        BigDecimal salesPersonAssignedRate = (salesPersonAssignedRateInfo != null ? salesPersonAssignedRateInfo.commRate() : BigDecimal.ZERO);
+        String salesNotes =(salesPersonAssignedRateInfo != null) ?salesPersonAssignedRateInfo.notes():"";
 
         // 5 Calculated Sales Commission Dollar Value
         BigDecimal salesCommissionValue = taskCommissionValue.multiply(salesPersonAssignedRate.divide(new BigDecimal(100), scale, RoundingMode.CEILING));
+
+
 
         return new CustomerLevelCalculatedCommissionInfo(amount.setScale(2, RoundingMode.CEILING),
                 taskRate.setScale(2, RoundingMode.CEILING),
@@ -55,7 +59,7 @@ public class InvoiceLevelService {
                 salesPersonAssignedRate.setScale(2, RoundingMode.CEILING),
                 salesCommissionValue.setScale(2, RoundingMode.CEILING),
                 taskRateInfo.notes(),
-                salesPersonAssignedRateInfo.notes(),
+                salesNotes,
                 taskRateInfo.assignedBy());
     }
 }

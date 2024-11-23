@@ -461,7 +461,7 @@ public class CustomerLevelDao {
     }
 
     public record TaskRateInfo(BigDecimal commRate, String assignedBy, String notes){ }
-    public TaskRateInfo getTaskRateInfo(int customerID, int empID, int taskID) {
+    public TaskRateInfo getTaskRateInfo(int customerID, int taskID) {
         TaskRateInfo taskRateInfo = null;
 
         String sql = """
@@ -491,4 +491,36 @@ public class CustomerLevelDao {
         }
         return taskRateInfo;
     }
+
+
+//    public void getCustomerLevelTaskRate(int invoiceID){
+//        TaskRateInfo taskRateInfo = null;
+//
+//        String sql = """
+//                    DECLARE @CUSTOMER_ID INT = :customerID
+//                    DECLARE @TASK_ID INT = :taskID
+//
+//
+//                    SELECT [commRate]
+//                          , employees.firstName + ' ' + employees.lastName as assignedBy
+//                          ,[notes]
+//                      FROM [intrafisher].[dbo].[InvComm_Config_CustomerLevel]
+//                        INNER JOIN employees ON employees.id = assignedBy
+//                      WHERE [customerID] = @CUSTOMER_ID
+//                        AND [taskID] = @TASK_ID
+//                    """;
+//
+//        MapSqlParameterSource parameters = new MapSqlParameterSource();
+//        parameters.addValue("customerID", customerID);
+//        parameters.addValue("taskID", taskID);
+//
+//        List<Map<String, Object>> rows = template.queryForList(sql, parameters);
+//        for (Map<String, Object> row : rows) {
+//            BigDecimal commRate = (BigDecimal) row.get("commRate");
+//            String assignedBy = (String) row.get("assignedBy");
+//            String notes = (String) row.get("notes");
+//            taskRateInfo = new TaskRateInfo(commRate, assignedBy, notes);
+//        }
+//        return taskRateInfo;
+//    }
 }
