@@ -65,7 +65,7 @@ public class InvoiceLevelController {
     }
 
     @GetMapping("/invoiceTaskRateInfo")
-    public InvoiceLevelDao.TaskRateInfo TaskRateInfo(@RequestParam("invoiceID") int invoiceID, @RequestParam("empID") int empID, @RequestParam("taskID") int taskID) {
+    public InvoiceLevelDao.TaskRateInfo TaskRateInfo(@RequestParam("invoiceID") int invoiceID, @RequestParam("taskID") int taskID) {
         return invoiceLevelDao.getTaskRateInfo(invoiceID, taskID);
     }
 
@@ -77,5 +77,26 @@ public class InvoiceLevelController {
     @GetMapping("/invoiceDistinctTaskItems")
     public List<InvoiceLevelDao.InvoiceTaskItem> EmployeeRateInfo(@RequestParam("invoiceID") int invoiceID) {
         return invoiceLevelDao.getDistinctChargedInvoiceTaskItems(invoiceID);
+    }
+
+    public record EmpInfo(int empID, BigDecimal salesRate) { }
+    public record InvoiceTaskConfig(
+            int assignedBy,
+            boolean active,
+            int taskID,
+            BigDecimal taskRate,
+            List<EmpInfo> empRates) { }
+    @PostMapping("/saveInvoiceTaskConfig")
+    public ResponseEntity<String> saveInvoiceTaskConfig(@RequestBody InvoiceTaskConfig invoiceTaskConfig) throws InterruptedException {
+//        try{
+//            invoiceLevelDao.saveTaskConfig(invoiceLevelConfig);
+//            invoiceLevelDao.saveEmployeeConfig(invoiceLevelConfig);
+//        }catch (DataAccessException e){
+//            e.printStackTrace();
+//            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+//        }
+
+//        TimeUnit.SECONDS.sleep(3);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 }

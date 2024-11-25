@@ -231,7 +231,7 @@ public class InvoiceLevelDao {
         return taskRateInfo;
     }
 
-    public record TaskRateInfo(BigDecimal commRate, String assignedBy, String notes){ }
+    public record TaskRateInfo(BigDecimal commRate, String assignedBy, Boolean active, String notes){ }
     public TaskRateInfo getTaskRateInfo(int invoiceID, int taskID){
         TaskRateInfo taskRateInfo = null;
 
@@ -241,6 +241,7 @@ public class InvoiceLevelDao {
                     
                     SELECT [taskRate],
                            employees.firstName + ' ' + employees.lastName as assignedBy,
+                           [InvComm_Config_InvoiceLevel].[active],
                            [taskNote]
                     FROM [intrafisher].[dbo].[InvComm_Config_InvoiceLevel]
                         INNER JOIN employees ON employees.id = assignedBy
@@ -256,8 +257,9 @@ public class InvoiceLevelDao {
         for (Map<String, Object> row : rows) {
             BigDecimal taskRate = (BigDecimal) row.get("taskRate");
             String assignedBy = (String) row.get("assignedBy");
+            Boolean active = (Boolean) row.get("active");
             String taskNote = (String) row.get("taskNote");
-            taskRateInfo = new TaskRateInfo(taskRate, assignedBy, taskNote);
+            taskRateInfo = new TaskRateInfo(taskRate, assignedBy, active, taskNote);
         }
         return taskRateInfo;
     }
@@ -298,4 +300,34 @@ public class InvoiceLevelDao {
         }
         return list;
     }
+
+//    public List<InvoiceTaskItem> getEmployeeCommRateInfo(int invoiceID) {
+//        List<InvoiceTaskItem> list = new ArrayList<>();
+//
+//        String sql = """
+//                    DECLARE @TASK_ID INT = 149
+//                    DECLARE @EMP_ID INT = 291
+//
+//                    SELECT [assignedRate]
+//                          ,[notes]
+//                    FROM [intrafisher].[dbo].[InvComm_EmpAssignedRates_InvoiceLevel]
+//                    WHERE [taskID] = @TASK_ID AND [empID] = @EMP_ID
+//                    """;
+//
+//        MapSqlParameterSource parameters = new MapSqlParameterSource();
+//        parameters.addValue("invoiceID", invoiceID);
+//
+//        List<Map<String, Object>> rows = template.queryForList(sql, parameters);
+//        for (Map<String, Object> row : rows) {
+//            int taskId = (int) row.get("taskId");
+//            String taskName = (String) row.get("taskName");
+//            int deptId = (int) row.get("deptId");
+//            String deptName = (String) row.get("deptName");
+//            String description = (String) row.get("description");
+//
+//            InvoiceTaskItem invoiceTaskItem = new InvoiceTaskItem(taskId, taskName, deptId, deptName, description);
+//            list.add(invoiceTaskItem);
+//        }
+//        return list;
+//    }
 }
