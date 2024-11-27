@@ -301,33 +301,69 @@ public class InvoiceLevelDao {
         return list;
     }
 
-//    public List<InvoiceTaskItem> getEmployeeCommRateInfo(int invoiceID) {
-//        List<InvoiceTaskItem> list = new ArrayList<>();
-//
-//        String sql = """
-//                    DECLARE @TASK_ID INT = 149
-//                    DECLARE @EMP_ID INT = 291
-//
-//                    SELECT [assignedRate]
-//                          ,[notes]
-//                    FROM [intrafisher].[dbo].[InvComm_EmpAssignedRates_InvoiceLevel]
-//                    WHERE [taskID] = @TASK_ID AND [empID] = @EMP_ID
-//                    """;
-//
-//        MapSqlParameterSource parameters = new MapSqlParameterSource();
-//        parameters.addValue("invoiceID", invoiceID);
-//
-//        List<Map<String, Object>> rows = template.queryForList(sql, parameters);
-//        for (Map<String, Object> row : rows) {
-//            int taskId = (int) row.get("taskId");
-//            String taskName = (String) row.get("taskName");
-//            int deptId = (int) row.get("deptId");
-//            String deptName = (String) row.get("deptName");
-//            String description = (String) row.get("description");
-//
-//            InvoiceTaskItem invoiceTaskItem = new InvoiceTaskItem(taskId, taskName, deptId, deptName, description);
-//            list.add(invoiceTaskItem);
-//        }
-//        return list;
-//    }
+    public int saveTaskConfiguration(InvoiceLevelController.InvoiceTaskConfig config) throws DataAccessException{
+        int rowsAffected = 0;
+
+        String sql = """
+                DECLARE @LAST_EDITED_BY INT = :lastEditedBy
+                DECLARE @CUSTOMER_ID INT = :customerID
+                DECLARE @INVOICE_ID INT = :invoiceID
+                DECLARE @TASK_ID INT = :taskID
+                DECLARE @TASK_RATE DECIMAL(18,2) = :taskRate
+                DECLARE @ACTIVE BIT = :active
+                DECLARE @NOTE VARCHAR(110) = :notes
+                
+                                   \s
+                DECLARE @CONFIG_EXIST INT = 0
+                SET @CONFIG_EXIST = (SELECT COUNT(*)
+                                     FROM [intrafisher].[dbo].[InvComm_Config_InvoiceLevel]
+                                     WHERE [invoiceID] = @INVOICE_ID
+                                        AND [taskID] = @TASK_ID)
+                
+                           \s
+                
+                IF(@CONFIG_EXIST > 0)
+                    BEGIN
+                        UPDATE [intrafisher].[dbo].[InvComm_Config_InvoiceLevel]
+                        SET [taskRate] = @TASK_RATE
+                           ,[taskNote] = @NOTE
+                           ,[assignedBy] = @LAST_EDITED_BY
+                           ,[lastEdit] = GETDATE( )
+                           ,[active] = @ACTIVE
+                        WHERE [invoiceID] = @INVOICE_ID
+                            AND [taskID] = @TASK_ID
+                    END
+                ELSE
+                    BEGIN
+                        INSERT INTO [intrafisher].[dbo].[InvComm_Config_InvoiceLevel]
+                              ([invoiceID]
+                              ,[taskID]
+                              ,[taskRate]
+                              ,[taskNote]
+                              ,[assignedBy]
+                              ,[lastEdit]
+                              ,[active])
+                
+                        VALUES(@INVOICE_ID
+                              ,@TASK_ID
+                              ,@TASK_RATE
+                              ,@NOTE
+                              ,@LAST_EDITED_BY
+                              ,GETDATE( )
+                              ,@ACTIVE)
+                    END
+                """;
+        MapSqlParameterSource parameters = new MapSqlParameterSource();
+        parameters.addValue("lastEditedBy", config.lastEditedBy());
+        parameters.addValue("customerID", config.customerID());
+        parameters.addValue("invoiceID", config.invoiceID());
+        parameters.addValue("taskID", config.taskID());
+        parameters.addValue("taskRate", config.taskRate());
+        parameters.addValue("active", config.active());
+        parameters.addValue("notes", config.notes());
+
+        rowsAffected = template.update(sql, parameters);
+
+        return rowsAffected;
+    }
 }

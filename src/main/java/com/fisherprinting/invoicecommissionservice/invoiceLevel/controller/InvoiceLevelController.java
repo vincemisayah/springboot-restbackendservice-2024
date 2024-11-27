@@ -50,19 +50,19 @@ public class InvoiceLevelController {
             int empID,
             String taskNote,
             String salesEmployeeNote) { }
-    @PostMapping("/saveInvoiceLevelConfig")
-    public ResponseEntity<String> saveInvoiceLevelConfig(@RequestBody InvoiceLevelConfig invoiceLevelConfig) throws InterruptedException {
-        try{
-            invoiceLevelDao.saveTaskConfig(invoiceLevelConfig);
-            invoiceLevelDao.saveEmployeeConfig(invoiceLevelConfig);
-        }catch (DataAccessException e){
-            e.printStackTrace();
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-
-        TimeUnit.SECONDS.sleep(3);
-        return new ResponseEntity<>(HttpStatus.OK);
-    }
+//    @PostMapping("/saveInvoiceLevelConfig")
+//    public ResponseEntity<String> saveInvoiceLevelConfig(@RequestBody InvoiceLevelConfig invoiceLevelConfig) throws InterruptedException {
+//        try{
+//            invoiceLevelDao.saveTaskConfig(invoiceLevelConfig);
+//            invoiceLevelDao.saveEmployeeConfig(invoiceLevelConfig);
+//        }catch (DataAccessException e){
+//            e.printStackTrace();
+//            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+//        }
+//
+//        TimeUnit.SECONDS.sleep(3);
+//        return new ResponseEntity<>(HttpStatus.OK);
+//    }
 
     @GetMapping("/invoiceTaskRateInfo")
     public InvoiceLevelDao.TaskRateInfo TaskRateInfo(@RequestParam("invoiceID") int invoiceID, @RequestParam("taskID") int taskID) {
@@ -80,11 +80,15 @@ public class InvoiceLevelController {
     }
 
     public record EmpInfo(int empID, BigDecimal salesRate) { }
+
     public record InvoiceTaskConfig(
-            int assignedBy,
-            boolean active,
+            int lastEditedBy,
+            int customerID,
+            int invoiceID,
             int taskID,
             BigDecimal taskRate,
+            boolean active,
+            String notes,
             List<EmpInfo> empRates) { }
     @PostMapping("/saveInvoiceTaskConfig")
     public ResponseEntity<String> saveInvoiceTaskConfig(@RequestBody InvoiceTaskConfig invoiceTaskConfig) throws InterruptedException {
@@ -96,7 +100,19 @@ public class InvoiceLevelController {
 //            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 //        }
 
-//        TimeUnit.SECONDS.sleep(3);
+//        try{
+//            invoiceLevelDao.saveTaskConfig(invoiceLevelConfig);
+//            invoiceLevelDao.saveEmployeeConfig(invoiceLevelConfig);
+//        }catch (DataAccessException e){
+//            e.printStackTrace();
+//            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+//        }
+
+        invoiceLevelDao.saveTaskConfiguration(invoiceTaskConfig);
+
+        TimeUnit.SECONDS.sleep(1);
+
+
         return new ResponseEntity<>(HttpStatus.OK);
     }
 }
