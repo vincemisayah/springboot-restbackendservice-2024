@@ -40,29 +40,7 @@ public class InvoiceLevelController {
         return invoiceLevelService.calculateInvoiceTaskCommission(customerID, invoiceID, taskID, orderNumber, employeeID);
     }
 
-    public record InvoiceLevelConfig(
-            int lastEditedBy,
-            int customerID,
-            int invoiceID,
-            int taskID,
-            BigDecimal taskRate,
-            BigDecimal salesRate,
-            int empID,
-            String taskNote,
-            String salesEmployeeNote) { }
-//    @PostMapping("/saveInvoiceLevelConfig")
-//    public ResponseEntity<String> saveInvoiceLevelConfig(@RequestBody InvoiceLevelConfig invoiceLevelConfig) throws InterruptedException {
-//        try{
-//            invoiceLevelDao.saveTaskConfig(invoiceLevelConfig);
-//            invoiceLevelDao.saveEmployeeConfig(invoiceLevelConfig);
-//        }catch (DataAccessException e){
-//            e.printStackTrace();
-//            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-//        }
-//
-//        TimeUnit.SECONDS.sleep(3);
-//        return new ResponseEntity<>(HttpStatus.OK);
-//    }
+
 
     @GetMapping("/invoiceTaskRateInfo")
     public InvoiceLevelDao.TaskRateInfo TaskRateInfo(@RequestParam("invoiceID") int invoiceID, @RequestParam("taskID") int taskID) {
@@ -79,7 +57,7 @@ public class InvoiceLevelController {
         return invoiceLevelDao.getDistinctChargedInvoiceTaskItems(invoiceID);
     }
 
-    public record EmpInfo(int empID, BigDecimal salesRate) { }
+    public record EmpInfo(int empID, BigDecimal salesRate, String note) { }
 
     public record InvoiceTaskConfig(
             int lastEditedBy,
@@ -92,26 +70,14 @@ public class InvoiceLevelController {
             List<EmpInfo> empRates) { }
     @PostMapping("/saveInvoiceTaskConfig")
     public ResponseEntity<String> saveInvoiceTaskConfig(@RequestBody InvoiceTaskConfig invoiceTaskConfig) throws InterruptedException {
-//        try{
-//            invoiceLevelDao.saveTaskConfig(invoiceLevelConfig);
-//            invoiceLevelDao.saveEmployeeConfig(invoiceLevelConfig);
-//        }catch (DataAccessException e){
-//            e.printStackTrace();
-//            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-//        }
-
-//        try{
-//            invoiceLevelDao.saveTaskConfig(invoiceLevelConfig);
-//            invoiceLevelDao.saveEmployeeConfig(invoiceLevelConfig);
-//        }catch (DataAccessException e){
-//            e.printStackTrace();
-//            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-//        }
-
         invoiceLevelDao.saveTaskConfiguration(invoiceTaskConfig);
-
-        TimeUnit.SECONDS.sleep(1);
-
+        invoiceTaskConfig.empRates.forEach(emp->{
+            invoiceLevelDao.saveEmployeeConfig(invoiceTaskConfig.invoiceID,
+                    invoiceTaskConfig.taskID(),
+                    emp.empID,
+                    emp.salesRate,
+                    emp.note);
+        });
 
         return new ResponseEntity<>(HttpStatus.OK);
     }

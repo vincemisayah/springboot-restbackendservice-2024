@@ -86,62 +86,7 @@ public class InvoiceLevelDao {
         return list;
     }
 
-    public int saveTaskConfig(InvoiceLevelController.InvoiceLevelConfig config) throws DataAccessException{
-        int rowsAffected = 0;
-
-        String sql = """
-                DECLARE @INVOICE_ID INT = :invoiceID
-                DECLARE @TASK_ID INT = :taskID
-                DECLARE @TASK_RATE DECIMAL(18,2) = :taskRate
-                DECLARE @NOTE VARCHAR(150) = :note
-                DECLARE @ASSIGNED_BY INT = :assignedBy
-                DECLARE @LAST_EDIT DATETIME = GETDATE( )
-                
-                DECLARE @CONFIG_EXIST INT = 0
-                SET @CONFIG_EXIST = (SELECT COUNT(*)\s
-                                     FROM [intrafisher].[dbo].[InvComm_Config_InvoiceLevel]
-                                     WHERE [invoiceID] = @INVOICE_ID AND [taskID] = @TASK_ID)
-                
-                IF(@CONFIG_EXIST > 0)
-                    BEGIN
-                        UPDATE [intrafisher].[dbo].[InvComm_Config_InvoiceLevel]
-                        SET [taskID]=@TASK_ID
-                		   ,[taskRate]=@TASK_RATE
-                		   ,[taskNote]=@NOTE
-                		   ,[assignedBy]=@ASSIGNED_BY
-                		   ,[lastEdit]=@LAST_EDIT
-                        WHERE [invoiceID] = @INVOICE_ID AND [taskID] = @TASK_ID
-                    END
-                ELSE
-                    BEGIN
-                		INSERT INTO [intrafisher].[dbo].[InvComm_Config_InvoiceLevel]
-                			([invoiceID]
-                			,[taskID]
-                			,[taskRate]
-                			,[taskNote]
-                			,[assignedBy]
-                			,[lastEdit])
-                		VALUES(@INVOICE_ID,
-                			   @TASK_ID,
-                			   @TASK_RATE,
-                			   @NOTE,
-                			   @ASSIGNED_BY,
-                			   @LAST_EDIT)
-                	END
-                """;
-        MapSqlParameterSource parameters = new MapSqlParameterSource();
-        parameters.addValue("invoiceID", config.invoiceID());
-        parameters.addValue("taskID", config.taskID());
-        parameters.addValue("taskRate", config.taskRate());
-        parameters.addValue("note", config.taskNote());
-        parameters.addValue("assignedBy", config.lastEditedBy());
-
-        rowsAffected = template.update(sql, parameters);
-
-        return rowsAffected;
-    }
-
-    public int saveEmployeeConfig(InvoiceLevelController.InvoiceLevelConfig config) throws DataAccessException{
+    public int saveEmployeeConfig(int invoiceId, int taskId, int empId, BigDecimal assignedRate, String note) throws DataAccessException{
         int rowsAffected = 0;
 
         String sql = """
@@ -149,26 +94,24 @@ public class InvoiceLevelDao {
                     DECLARE @TASK_ID INT = :taskID
                     DECLARE @EMP_ID INT = :empID
                     DECLARE @ASSIGNED_RATE DECIMAL(18,2) = :assignedRate
-                    DECLARE @NOTES VARCHAR(150) = :notes
+                    DECLARE @NOTE VARCHAR(110) = :note
                     
+                                       \s
                     DECLARE @CONFIG_EXIST INT = 0
                     SET @CONFIG_EXIST = (SELECT COUNT(*)
                                          FROM [intrafisher].[dbo].[InvComm_EmpAssignedRates_InvoiceLevel]
                                          WHERE [invoiceID] = @INVOICE_ID
-                                           AND [taskID] = @TASK_ID
-                                           AND [empID] = @EMP_ID)
+                                            AND [taskID] = @TASK_ID
+                                            AND [empID] = @EMP_ID)
                     
                     IF(@CONFIG_EXIST > 0)
                         BEGIN
                             UPDATE [intrafisher].[dbo].[InvComm_EmpAssignedRates_InvoiceLevel]
-                            SET [invoiceID] = @INVOICE_ID
-                               ,[taskID] = @TASK_ID
-                               ,[empID] = @EMP_ID
-                               ,[assignedRate] = @ASSIGNED_RATE
-                               ,[notes] = @NOTES
-                            WHERE [invoiceID] = @INVOICE_ID
-                                AND [taskID] = @TASK_ID
-                                AND [empID] = @EMP_ID
+                            SET  [assignedRate] = @ASSIGNED_RATE
+                                ,[notes] = @NOTE
+                             WHERE [invoiceID] = @INVOICE_ID
+                                    AND [taskID] = @TASK_ID
+                                    AND [empID] = @EMP_ID
                         END
                     ELSE
                         BEGIN
@@ -178,20 +121,21 @@ public class InvoiceLevelDao {
                                   ,[empID]
                                   ,[assignedRate]
                                   ,[notes])
-                            VALUES(@INVOICE_ID,
-                                   @TASK_ID,
-                                   @EMP_ID,
-                                   @ASSIGNED_RATE,
-                                   @NOTES)
+                    
+                            VALUES(@INVOICE_ID
+                                  ,@TASK_ID
+                                  ,@EMP_ID
+                                  ,@ASSIGNED_RATE
+                                  ,@NOTE)
                         END
                     """;
 
         MapSqlParameterSource parameters = new MapSqlParameterSource();
-        parameters.addValue("invoiceID", config.invoiceID());
-        parameters.addValue("taskID", config.taskID());
-        parameters.addValue("empID", config.empID());
-        parameters.addValue("assignedRate", config.salesRate());
-        parameters.addValue("notes", config.salesEmployeeNote());
+        parameters.addValue("invoiceID", invoiceId);
+        parameters.addValue("taskID", taskId);
+        parameters.addValue("empID", empId);
+        parameters.addValue("assignedRate", assignedRate);
+        parameters.addValue("note", note);
 
         rowsAffected = template.update(sql, parameters);
 
