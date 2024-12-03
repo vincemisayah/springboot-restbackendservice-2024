@@ -4,6 +4,7 @@ import com.fisherprinting.invoicecommissionservice.customerLevel.dao.CustomerLev
 import com.fisherprinting.invoicecommissionservice.customerLevel.model.CustomerInfo;
 import com.fisherprinting.invoicecommissionservice.customerLevel.model.SalesPerson;
 import com.fisherprinting.invoicecommissionservice.customerLevel.service.CustomerLevelService;
+import com.fisherprinting.invoicecommissionservice.invoiceLevel.dao.InvoiceLevelDao;
 import com.fisherprinting.invoicecommissionservice.invoiceLevel.service.InvoiceLevelService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -116,6 +117,11 @@ public class CustomerLevelController {
     @GetMapping("/taskRateInfo")
     public CustomerLevelDao.TaskRateInfo getTaskRateInfo(@RequestParam("customerID") int customerID, @RequestParam("taskID") int taskID) {
         return customerLevelDao.getTaskRateInfo(customerID, taskID);
+    }
+
+    @GetMapping("/employeeAssignedRate")
+    public CustomerLevelDao.EmployeeTaskRateInfo EmployeeRateInfo(@RequestParam("customerID") int customerID, @RequestParam("empID") int empID, @RequestParam("taskID") int taskID) {
+        return customerLevelDao.getEmployeeTaskRateInfo(customerID, empID, taskID);
     }
 
 
