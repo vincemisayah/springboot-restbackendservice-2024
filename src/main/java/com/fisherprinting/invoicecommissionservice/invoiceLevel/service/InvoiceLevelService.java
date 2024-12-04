@@ -35,9 +35,9 @@ public class InvoiceLevelService {
 
         // 2 Task Rate Info
         InvoiceLevelDao.TaskRateInfo taskRateInfo = invoiceLevelDao.getTaskRateInfo(invoiceID, taskID);
-        if(!taskRateInfo.active()) return null; // Return null if task config is disabled.
-        BigDecimal taskRate = (taskRateInfo != null)? taskRateInfo.commRate(): BigDecimal.ZERO;
-        String taskNotes =(taskRateInfo != null) ? taskRateInfo.notes():"";
+        if(taskRateInfo == null || !taskRateInfo.active()) return null; // Return null if task config is disabled.
+        BigDecimal taskRate =  taskRateInfo.commRate();
+        String taskNotes =(taskRateInfo.notes() != null) ? taskRateInfo.notes():"";
 
         // 3 Calculated Task Commission Dollar Value
         int scale = 4;
@@ -59,7 +59,7 @@ public class InvoiceLevelService {
                 taskCommissionValue.setScale(2, RoundingMode.CEILING),
                 salesPersonAssignedRate.setScale(2, RoundingMode.CEILING),
                 salesCommissionValue.setScale(2, RoundingMode.CEILING),
-                taskRateInfo.notes(),
+                taskNotes,
                 salesNotes,
                 taskRateInfo.assignedBy());
     }
