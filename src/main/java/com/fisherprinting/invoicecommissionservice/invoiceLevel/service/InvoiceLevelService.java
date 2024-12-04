@@ -16,7 +16,7 @@ public class InvoiceLevelService {
         this.invoiceLevelDao = invoiceLevelDao;
     }
 
-    public record CustomerLevelCalculatedCommissionInfo(
+    public record InvoiceLevelCalculatedCommissionInfo(
             BigDecimal amount,
             BigDecimal taskRate,
             BigDecimal taskCommissionDollarValue,
@@ -25,7 +25,7 @@ public class InvoiceLevelService {
             String taskRateNote,
             String salesPersonAssignedRateNote,
             String assignedBy){ }
-    public CustomerLevelCalculatedCommissionInfo calculateInvoiceTaskCommission(int customerID, int invoiceID, int taskID, int orderNumber, int employeeID){
+    public InvoiceLevelCalculatedCommissionInfo calculateInvoiceTaskCommission(int customerID, int invoiceID, int taskID, int orderNumber, int employeeID){
         List<InvoiceLevelDao.InvoiceChargedTaskItem> invoiceChargedTaskItems = invoiceLevelDao.getInvoiceChargedItems(invoiceID);
         invoiceChargedTaskItems.removeIf(n->n.order() != orderNumber);
         InvoiceLevelDao.InvoiceChargedTaskItem invoiceItem = invoiceChargedTaskItems.getFirst();
@@ -35,6 +35,7 @@ public class InvoiceLevelService {
 
         // 2 Task Rate Info
         InvoiceLevelDao.TaskRateInfo taskRateInfo = invoiceLevelDao.getTaskRateInfo(invoiceID, taskID);
+        if(!taskRateInfo.active()) return null; // Return null if task config is disabled.
         BigDecimal taskRate = (taskRateInfo != null)? taskRateInfo.commRate(): BigDecimal.ZERO;
         String taskNotes =(taskRateInfo != null) ? taskRateInfo.notes():"";
 
@@ -53,7 +54,7 @@ public class InvoiceLevelService {
 
 
 
-        return new CustomerLevelCalculatedCommissionInfo(amount.setScale(2, RoundingMode.CEILING),
+        return new InvoiceLevelCalculatedCommissionInfo(amount.setScale(2, RoundingMode.CEILING),
                 taskRate.setScale(2, RoundingMode.CEILING),
                 taskCommissionValue.setScale(2, RoundingMode.CEILING),
                 salesPersonAssignedRate.setScale(2, RoundingMode.CEILING),

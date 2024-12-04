@@ -81,6 +81,7 @@ public class CustomerLevelService {
 
         // 2 Task Rate Info
         CustomerLevelDao.TaskRateInfo taskRateInfo = customerLevelDao.getTaskRateInfo(customerID, taskID);
+        if(taskRateInfo == null){return null;} // If null, return null.
         BigDecimal taskRate = taskRateInfo.commRate();
 
         // 3 Calculated Task Commission Dollar Value

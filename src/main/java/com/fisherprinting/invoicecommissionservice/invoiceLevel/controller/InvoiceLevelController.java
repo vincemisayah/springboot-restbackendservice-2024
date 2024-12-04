@@ -31,7 +31,7 @@ public class InvoiceLevelController {
 
     // Currently at Customer Level only
     @GetMapping("/calculatedInvoiceTaskCommission")
-    public InvoiceLevelService.CustomerLevelCalculatedCommissionInfo
+    public InvoiceLevelService.InvoiceLevelCalculatedCommissionInfo
     calculateInvoiceTaskCommission(@RequestParam("customerID")int customerID,
                                    @RequestParam("invoiceID")int invoiceID,
                                    @RequestParam("taskID")int taskID,
