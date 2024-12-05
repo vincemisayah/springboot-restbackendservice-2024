@@ -82,6 +82,7 @@ public class ReportController {
         }
     }
 
+
     // localhost:1118/invoiceCommissionService/report/v1/pdfdownload/123
     @GetMapping("/pdfdownload/{invoiceID}")
     public ResponseEntity<Resource> downloadContractPDF(@PathVariable("invoiceID") Integer invoiceID){
