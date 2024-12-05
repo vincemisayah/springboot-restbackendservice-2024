@@ -79,4 +79,24 @@ public class ReportController {
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(resource);
     }
+
+    @GetMapping("/viewpdf/salespersonCommReport/{empID}")
+    public ResponseEntity<Resource> viewSalespersonCommissionReport(
+            @PathVariable("empID") Integer empID,
+            @RequestParam("d1")  @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate d1,
+            @RequestParam("d2")  @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate d2)
+    {
+        // Test Parameters
+        int employeeId = empID;
+        List<Integer> invoiceIds = new ArrayList<>();
+        invoiceIds.add(2008072);
+
+        InputStreamResource resource = new InputStreamResource(reportService.getSalespersonCommissionReport(employeeId, d1, d2));
+        String fileName = "testFileName.pdf";
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "inline; filename=" + fileName)
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(resource);
+    }
 }

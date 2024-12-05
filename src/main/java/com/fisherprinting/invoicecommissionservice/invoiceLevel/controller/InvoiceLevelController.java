@@ -24,6 +24,11 @@ public class InvoiceLevelController {
         this.invoiceLevelService = invoiceLevelService;
     }
 
+    @GetMapping("/invoiceSearchResult")
+    public List<InvoiceLevelDao.InvoiceSearchResult> invoiceSearchResult(@RequestParam("invoiceID") int invoiceID) {
+        return invoiceLevelDao.getInvoiceById(invoiceID);
+    }
+
     @GetMapping("/invoiceChargedTaskItems")
     public List<InvoiceLevelDao.InvoiceChargedTaskItem> getInvoiceList(@RequestParam("invoiceId") int invoiceId) {
         return invoiceLevelDao.getInvoiceChargedItems(invoiceId);

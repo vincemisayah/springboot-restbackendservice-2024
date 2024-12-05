@@ -7,6 +7,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 
 import java.math.BigDecimal;
+import java.sql.Date;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +19,39 @@ public class InvoiceLevelDao {
 
     public InvoiceLevelDao(NamedParameterJdbcTemplate template) {
         this.template = template;
+    }
+
+    public record InvoiceSearchResult(
+            int invoiceID,
+            String customerName,
+            Date invoiceDate
+    ) { }
+    public List<InvoiceSearchResult> getInvoiceById(int invoiceID) {
+        List<InvoiceSearchResult> list = new ArrayList<InvoiceSearchResult>( );
+
+        String sql = """
+                    DECLARE @INVOICE_ID INT = :invoiceID
+                    
+                    SELECT [invoices].[id] invoiceID,
+                           customers.name as customerName,
+                           CONVERT(date, [date]) as invoiceDate
+                    FROM [intrafisher].[dbo].[invoices]
+                        INNER JOIN customers on invoices.customer = customers.id
+                    WHERE [invoices].[id] = @INVOICE_ID
+                    """;
+
+        MapSqlParameterSource parameters = new MapSqlParameterSource();
+        parameters.addValue("invoiceID", invoiceID);
+
+        List<Map<String, Object>> rows = template.queryForList(sql, parameters);
+        for (Map<String, Object> row : rows) {
+            int invoiceId = (int) row.get("invoiceID");
+            String customerName = (String) row.get("customerName");
+            Date invoiceDate = (Date) row.get("invoiceDate");
+            InvoiceSearchResult invoiceItem = new InvoiceSearchResult(invoiceId, customerName, invoiceDate);
+            list.add(invoiceItem);
+        }
+        return list;
     }
 
 

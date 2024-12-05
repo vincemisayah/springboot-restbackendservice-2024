@@ -58,7 +58,7 @@ public class ReportService {
         // TODO: Filter out which invoices are paid
         List<Integer> invoiceIds = new ArrayList<>();
         invoiceIds.add(208072);
-        invoiceIds.add(208072);
+        invoiceIds.add(207043);
 
         InputStream inputStream = null;
         try{
