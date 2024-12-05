@@ -6,6 +6,7 @@ import com.fisherprinting.invoicecommissionservice.report.dtos.DataTransferObjec
 import com.fisherprinting.invoicecommissionservice.report.service.ReportService;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -14,6 +15,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -38,48 +42,7 @@ public class ReportController {
                                    @RequestParam("taskID")int taskID,
                                    @RequestParam("orderNumber")int orderNumber,
                                    @RequestParam("employeeID")int employeeID) {
-        CustomerLevelService.CustomerLevelCalculatedCommissionInfo customerLevelCommInfo = this.customerLevelService.calculateInvoiceTaskCommission(customerID, invoiceID, taskID, orderNumber, employeeID);
-        InvoiceLevelService.InvoiceLevelCalculatedCommissionInfo invoiceLevelCommInfo = this.invoiceLevelService.calculateInvoiceTaskCommission(customerID, invoiceID, taskID, orderNumber, employeeID);
-
-        if(invoiceLevelCommInfo != null) {
-            String configLevel = "INVOICE LEVEL";
-            BigDecimal amount = invoiceLevelCommInfo.amount();
-            BigDecimal taskRate = invoiceLevelCommInfo.taskRate();
-            BigDecimal taskCommissionDollarValue = invoiceLevelCommInfo.taskCommissionDollarValue();
-            BigDecimal salesPersonAssignedRate = invoiceLevelCommInfo.salesPersonAssignedRate();
-            BigDecimal salesDollarValue = invoiceLevelCommInfo.salesDollarValue();
-            String taskRateNote = invoiceLevelCommInfo.taskRateNote();
-            String salesPersonAssignedRateNote = invoiceLevelCommInfo.salesPersonAssignedRateNote();
-            String assignedBy = invoiceLevelCommInfo.assignedBy();
-
-            return new DataTransferObjectsContainer.FinalSalesCalculatedCommissionInfo(
-                    configLevel,amount,taskRate,
-                    taskCommissionDollarValue,
-                    salesPersonAssignedRate,salesDollarValue,
-                    taskRateNote,salesPersonAssignedRateNote,assignedBy);
-        }else if(customerLevelCommInfo != null) {
-            String configLevel = "CUSTOMER LEVEL";
-            BigDecimal amount = customerLevelCommInfo.amount();
-            BigDecimal taskRate = customerLevelCommInfo.taskRate();
-            BigDecimal taskCommissionDollarValue = customerLevelCommInfo.taskCommissionDollarValue();
-            BigDecimal salesPersonAssignedRate = customerLevelCommInfo.salesPersonAssignedRate();
-            BigDecimal salesDollarValue = customerLevelCommInfo.salesDollarValue();
-            String taskRateNote = customerLevelCommInfo.taskRateNote();
-            String salesPersonAssignedRateNote = customerLevelCommInfo.salesPersonAssignedRateNote();
-            String assignedBy = customerLevelCommInfo.assignedBy();
-
-            return new DataTransferObjectsContainer.FinalSalesCalculatedCommissionInfo(
-                    configLevel,amount,taskRate,
-                    taskCommissionDollarValue,
-                    salesPersonAssignedRate,salesDollarValue,
-                    taskRateNote,salesPersonAssignedRateNote,assignedBy);
-        }else{
-            // 404 code status is returned if customer-level config does not exist.
-            // Prompt the user to create a customer-level config if this happens.
-            throw new ResponseStatusException(
-                    HttpStatus.NOT_FOUND, "entity not found"
-            );
-        }
+        return reportService.calculateInvoiceTaskCommission(customerID, invoiceID, taskID, orderNumber, employeeID);
     }
 
 
@@ -88,6 +51,27 @@ public class ReportController {
     public ResponseEntity<Resource> downloadContractPDF(@PathVariable("invoiceID") Integer invoiceID){
 //        InputStreamResource resource = new InputStreamResource(reportService.generateInvoiceCommissionReport());
         InputStreamResource resource = new InputStreamResource(reportService.test1());
+        String fileName = "testFileName.pdf";
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=" + fileName)
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(resource);
+    }
+
+    // localhost:1118/invoiceCommissionService/report/v1/pdfDownload/salespersonCommReport/291?d1=2024-01-05&d2=2024-12-05
+    @GetMapping("/pdfDownload/salespersonCommReport/{empID}")
+    public ResponseEntity<Resource> downloadSalespersonCommissionReport(
+            @PathVariable("empID") Integer empID,
+            @RequestParam("d1")  @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate d1,
+            @RequestParam("d2")  @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate d2)
+    {
+        // Test Parameters
+        int employeeId = empID;
+        List<Integer> invoiceIds = new ArrayList<>();
+        invoiceIds.add(2008072);
+
+        InputStreamResource resource = new InputStreamResource(reportService.getSalespersonCommissionReport(employeeId, d1, d2));
         String fileName = "testFileName.pdf";
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,

@@ -4,6 +4,8 @@ import com.fisherprinting.invoicecommissionservice.customerLevel.service.Custome
 import com.fisherprinting.invoicecommissionservice.invoiceLevel.service.InvoiceLevelService;
 
 import java.math.BigDecimal;
+import java.sql.Date;
+import java.time.LocalDate;
 
 public class DataTransferObjectsContainer {
     public record SalesEmployeeCommission(
@@ -20,4 +22,12 @@ public class DataTransferObjectsContainer {
             String taskRateNote,
             String salesPersonAssignedRateNote,
             String assignedBy){ }
+
+    public record InvoiceInfo(
+            String customerAR,
+            int customerId,
+            String customerName,
+            Date invoiceDate,
+            Date paymentDueDate)
+    { }
 }
