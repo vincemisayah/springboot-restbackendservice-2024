@@ -5,6 +5,7 @@ import com.fisherprinting.invoicecommissionservice.invoiceLevel.dao.InvoiceLevel
 import com.fisherprinting.invoicecommissionservice.invoiceLevel.service.InvoiceLevelService;
 import com.fisherprinting.invoicecommissionservice.report.dao.ReportDao;
 import com.fisherprinting.invoicecommissionservice.report.dtos.DataTransferObjectsContainer;
+import com.itextpdf.kernel.colors.ColorConstants;
 import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
@@ -35,6 +36,9 @@ import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
+
+import static com.itextpdf.kernel.pdf.PdfName.Border;
+
 
 @Service
 public class ReportService {
@@ -83,11 +87,11 @@ public class ReportService {
 
                 p = new Paragraph();
                 p.add("\n");
-                Font font = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, BaseColor.BLACK);
+                Font font = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 8, BaseColor.BLACK);
                 Chunk chunkInvoiceId = new Chunk((i+1) + ". INVOICE ID: " + invoiceId + "\n", font);
                 p.add(chunkInvoiceId);
 
-                Font fontTablElem = FontFactory.getFont(FontFactory.HELVETICA, 10, BaseColor.BLACK);
+                Font fontTablElem = FontFactory.getFont(FontFactory.HELVETICA, 8, BaseColor.BLACK);
                 p.setTabSettings(new TabSettings(20f));
                 p.add(Chunk.TABBING);
                 p.add(new Chunk("\u2022  Customer AR#: " + invoiceInfo.customerAR( ) + "\n", fontTablElem));
@@ -104,20 +108,22 @@ public class ReportService {
 
                 List<InvoiceLevelDao.InvoiceChargedTaskItem> chargedTaskItems = invoiceLevelDao.getInvoiceChargedItems(invoiceId);
 
+                BigDecimal salesCommissionTotal = new BigDecimal(0);
+
 
                 int count = 0;
                 for(InvoiceLevelDao.InvoiceChargedTaskItem item : chargedTaskItems){
                     DataTransferObjectsContainer.FinalSalesCalculatedCommissionInfo calculatedCommissionInfo = calculateInvoiceTaskCommission(
                             invoiceInfo.customerId(), invoiceId, item.taskId(), item.order(), empID);
 
+                    salesCommissionTotal = (calculatedCommissionInfo != null)? salesCommissionTotal.add(calculatedCommissionInfo.salesDollarValue()):salesCommissionTotal.add(new BigDecimal(0));
+
                     PdfPTable table = new PdfPTable(9);
                     table.setTotalWidth(500);
                     table.setLockedWidth(true);
-                    float[] columnWidths = new float[]{120f, 120f, 120f, 120f, 120f, 120f, 120f, 120f, 120f};
-                    table.setWidths(columnWidths);
 
                     if(count < 1){
-                        Font tableHeaderFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9, BaseColor.BLACK);
+                        Font tableHeaderFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 7, BaseColor.BLACK);
                         PdfPCell c1 = new PdfPCell(new Paragraph("Task", tableHeaderFont));
                         PdfPCell c2 = new PdfPCell(new Paragraph("Dept", tableHeaderFont));
                         PdfPCell c3 = new PdfPCell(new Paragraph("Qty", tableHeaderFont));
@@ -128,7 +134,7 @@ public class ReportService {
                         PdfPCell c8 = new PdfPCell(new Paragraph("Sales Assigned Rate", tableHeaderFont));
                         PdfPCell c9 = new PdfPCell(new Paragraph("Sales Comm. Amt.", tableHeaderFont));
 
-                        c9.setPaddingRight(25f);
+
 
                         c1.setHorizontalAlignment(Element.ALIGN_CENTER);
                         c1.setVerticalAlignment(Element.ALIGN_MIDDLE);
@@ -159,10 +165,9 @@ public class ReportService {
                         table.addCell(c7);
                         table.addCell(c8);
                         table.addCell(c9);
-                        ++count;
                     }
 
-                    Font tableFont = FontFactory.getFont(FontFactory.HELVETICA, 9, BaseColor.BLACK);
+                    Font tableFont = FontFactory.getFont(FontFactory.HELVETICA, 7, BaseColor.BLACK);
                     PdfPCell cell1 = new PdfPCell(new Paragraph(item.taskName(), tableFont));
                     PdfPCell cell2 = new PdfPCell(new Paragraph(item.deptName(), tableFont));
                     PdfPCell cell3 = new PdfPCell(new Paragraph(new DecimalFormat("0.#").format(item.qty()), tableFont));
@@ -174,12 +179,39 @@ public class ReportService {
                     PdfPCell cell9 = new PdfPCell(new Paragraph("n/a", FontFactory.getFont(FontFactory.HELVETICA, 8, BaseColor.BLACK)));
 
                     cell3.setHorizontalAlignment(Element.ALIGN_CENTER);
+                    cell3.setVerticalAlignment(Element.ALIGN_MIDDLE);
+
                     cell4.setHorizontalAlignment(Element.ALIGN_RIGHT);
+                    cell4.setVerticalAlignment(Element.ALIGN_MIDDLE);
+
                     cell5.setHorizontalAlignment(Element.ALIGN_RIGHT);
+                    cell5.setVerticalAlignment(Element.ALIGN_MIDDLE);
+
                     cell6.setHorizontalAlignment(Element.ALIGN_CENTER);
+                    cell6.setVerticalAlignment(Element.ALIGN_MIDDLE);
+
                     cell7.setHorizontalAlignment(Element.ALIGN_CENTER);
+                    cell7.setVerticalAlignment(Element.ALIGN_MIDDLE);
+
                     cell8.setHorizontalAlignment(Element.ALIGN_CENTER);
+                    cell8.setVerticalAlignment(Element.ALIGN_MIDDLE);
+
                     cell9.setHorizontalAlignment(Element.ALIGN_CENTER);
+                    cell9.setVerticalAlignment(Element.ALIGN_MIDDLE);
+
+                    BaseColor LightGray = new BaseColor(215, 215, 215);
+                    if(count%2 == 0){
+                        cell1.setBackgroundColor(LightGray);
+                        cell2.setBackgroundColor(LightGray);
+                        cell3.setBackgroundColor(LightGray);
+                        cell4.setBackgroundColor(LightGray);
+                        cell5.setBackgroundColor(LightGray);
+                        cell6.setBackgroundColor(LightGray);
+                        cell7.setBackgroundColor(LightGray);
+                        cell8.setBackgroundColor(LightGray);
+                        cell9.setBackgroundColor(LightGray);
+                    }
+
 
                     if(calculatedCommissionInfo != null){
                         cell6 = new PdfPCell(new Paragraph(String.valueOf(calculatedCommissionInfo.taskRate()) + "%", tableFont));
@@ -188,9 +220,28 @@ public class ReportService {
                         cell9 = new PdfPCell(new Paragraph("$" + String.valueOf(calculatedCommissionInfo.salesDollarValue()), tableFont));
 
                         cell6.setHorizontalAlignment(Element.ALIGN_RIGHT);
+                        cell6.setVerticalAlignment(Element.ALIGN_MIDDLE);
+
                         cell7.setHorizontalAlignment(Element.ALIGN_RIGHT);
+                        cell7.setVerticalAlignment(Element.ALIGN_MIDDLE);
+
                         cell8.setHorizontalAlignment(Element.ALIGN_RIGHT);
+                        cell8.setVerticalAlignment(Element.ALIGN_MIDDLE);
+
                         cell9.setHorizontalAlignment(Element.ALIGN_RIGHT);
+                        cell9.setVerticalAlignment(Element.ALIGN_MIDDLE);
+
+                        cell6.setPaddingRight(3f);
+                        cell7.setPaddingRight(3f);
+                        cell8.setPaddingRight(3f);
+                        cell9.setPaddingRight(3f);
+
+                        if(count%2 == 0){
+                            cell6.setBackgroundColor(LightGray);
+                            cell7.setBackgroundColor(LightGray);
+                            cell8.setBackgroundColor(LightGray);
+                            cell9.setBackgroundColor(LightGray);
+                        }
                     }
 
                     table.addCell(cell1);
@@ -203,8 +254,30 @@ public class ReportService {
                     table.addCell(cell8);
                     table.addCell(cell9);
 
+
+                    // Display total at the last row, final column
+                    if(count == chargedTaskItems.size()-1){
+                        table.addCell(new PdfPCell(new Paragraph("")));
+                        table.addCell(new PdfPCell(new Paragraph("")));
+                        table.addCell(new PdfPCell(new Paragraph("")));
+                        table.addCell(new PdfPCell(new Paragraph("")));
+                        table.addCell(new PdfPCell(new Paragraph("")));
+                        table.addCell(new PdfPCell(new Paragraph("")));
+                        table.addCell(new PdfPCell(new Paragraph("")));
+                        table.addCell(new PdfPCell(new Paragraph("")));
+
+                        Font salesCommissionTotalFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 8, new BaseColor(11, 84, 30));
+                        PdfPCell salesTotalCommission = new PdfPCell(new Paragraph("$"+ String.valueOf(salesCommissionTotal), salesCommissionTotalFont));
+                        salesTotalCommission.setBackgroundColor(new BaseColor(193, 247, 207));
+                        salesTotalCommission.setHorizontalAlignment(Element.ALIGN_CENTER);
+                        salesTotalCommission.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                        table.addCell(salesTotalCommission);
+                    }
+
                     document.add(table);
+                    ++count;
                 }
+
 
             }
 
