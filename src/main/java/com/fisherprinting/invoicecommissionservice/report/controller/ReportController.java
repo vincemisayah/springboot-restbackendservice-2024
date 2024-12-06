@@ -80,6 +80,7 @@ public class ReportController {
                 .body(resource);
     }
 
+    // localhost:1118/invoiceCommissionService/report/v1/viewpdf/salespersonCommReport/291?d1=2024-01-05&d2=2024-12-05
     @GetMapping("/viewpdf/salespersonCommReport/{empID}")
     public ResponseEntity<Resource> viewSalespersonCommissionReport(
             @PathVariable("empID") Integer empID,

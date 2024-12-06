@@ -128,6 +128,8 @@ public class ReportService {
                         PdfPCell c8 = new PdfPCell(new Paragraph("Sales Assigned Rate", tableHeaderFont));
                         PdfPCell c9 = new PdfPCell(new Paragraph("Sales Comm. Amt.", tableHeaderFont));
 
+                        c9.setPaddingRight(25f);
+
                         c1.setHorizontalAlignment(Element.ALIGN_CENTER);
                         c1.setVerticalAlignment(Element.ALIGN_MIDDLE);
                         c2.setHorizontalAlignment(Element.ALIGN_CENTER);
@@ -144,6 +146,9 @@ public class ReportService {
                         c7.setVerticalAlignment(Element.ALIGN_MIDDLE);
                         c8.setHorizontalAlignment(Element.ALIGN_CENTER);
                         c8.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                        c9.setHorizontalAlignment(Element.ALIGN_CENTER);
+                        c9.setVerticalAlignment(Element.ALIGN_MIDDLE);
+
 
                         table.addCell(c1);
                         table.addCell(c2);
