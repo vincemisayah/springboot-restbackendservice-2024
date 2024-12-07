@@ -253,9 +253,7 @@ public class InvoiceLevelDao {
                         [task] as taskId,
                         t1.name as taskName,
                         t2.id as deptId,
-                        t2.name as deptName,
-                        [desc] as description
-                    
+                        t2.name as deptName
                     FROM [intrafisher].[dbo].[invoiceItems]
                         INNER JOIN [intrafisher].[dbo].[invTasks] as t1 on [task] = t1.id
                         INNER JOIN [intrafisher].[dbo].[invDepts] as t2 on t1.dept = t2.id
@@ -343,5 +341,56 @@ public class InvoiceLevelDao {
         rowsAffected = template.update(sql, parameters);
 
         return rowsAffected;
+    }
+
+    public record InvoiceInfo(
+            int invoiceID,
+            String invoiceTitle,
+            Date invoiceDate,
+            Date invoiceCreatedDate,
+            int jobID,
+            String jobName,
+            String customerName){}
+    public List<InvoiceInfo> getInvoiceInfoList(int invoiceID) {
+        List<InvoiceInfo> list = new ArrayList<>();
+
+        String sql = """
+                    DECLARE @INVOICE_ID INT = :invoiceID
+                    
+                    SELECT TOP(200) \s
+                        [invoices].[id] as invoiceID,
+                        [title] as invoiceTitle,
+                        CONVERT(date, [date]) as invoiceDate,
+                        CONVERT(date, [invoices].[created]) as invoiceCreatedDate,
+                        [job] as jobID,
+                        jobs.name as jobName,
+                        customers.name as customerName
+                    FROM\s
+                        [intrafisher].[dbo].[invoices]
+                            INNER JOIN jobs on invoices.job = jobs.id
+                            INNER JOIN customers on jobs.customerID = customers.id
+                    WHERE\s
+                        CONVERT(varchar, [invoices].[id]) LIKE TRIM(CONVERT(varchar, @INVOICE_ID)) + '%'
+                        AND [invoices].active = 1
+                    ORDER BY [invoices].[id]
+                    """;
+
+        MapSqlParameterSource parameters = new MapSqlParameterSource();
+        parameters.addValue("invoiceID", invoiceID);
+
+        List<Map<String, Object>> rows = template.queryForList(sql, parameters);
+        for (Map<String, Object> row : rows) {
+            int invoiceId = (int) row.get("invoiceID");
+            String invoiceTitle = (String) row.get("invoiceTitle");
+            Date invoiceDate = (Date) row.get("invoiceDate");
+            Date invoiceCreatedDate = (Date) row.get("invoiceCreatedDate");
+            int jobID = (int) row.get("jobID");
+            String jobName = (String) row.get("jobName");
+            String customerName = (String) row.get("customerName");
+            InvoiceInfo invoiceInfo = new InvoiceInfo(invoiceId, invoiceTitle, invoiceDate, invoiceCreatedDate, jobID, jobName, customerName);
+
+            list.add(invoiceInfo);
+        }
+        return list;
     }
 }

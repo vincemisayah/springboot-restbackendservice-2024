@@ -61,8 +61,9 @@ public class ReportService {
 
         // TODO: Filter out which invoices are paid
         List<Integer> invoiceIds = new ArrayList<>();
-        invoiceIds.add(208072);
-        invoiceIds.add(207043);
+//        invoiceIds.add(208072);
+        invoiceIds.add(200001);
+//        invoiceIds.add(207043);
 
         InputStream inputStream = null;
         try{
@@ -113,7 +114,7 @@ public class ReportService {
 
                 int count = 0;
                 for(InvoiceLevelDao.InvoiceChargedTaskItem item : chargedTaskItems){
-                    DataTransferObjectsContainer.FinalSalesCalculatedCommissionInfo calculatedCommissionInfo = calculateInvoiceTaskCommission(
+                    DataTransferObjectsContainer.FinalSalesCalculatedCommissionInfo calculatedCommissionInfo = this.calculateInvoiceTaskCommission(
                             invoiceInfo.customerId(), invoiceId, item.taskId(), item.order(), empID);
 
                     salesCommissionTotal = (calculatedCommissionInfo != null)? salesCommissionTotal.add(calculatedCommissionInfo.salesDollarValue()):salesCommissionTotal.add(new BigDecimal(0));
@@ -393,11 +394,11 @@ public class ReportService {
     }
 
     public DataTransferObjectsContainer.FinalSalesCalculatedCommissionInfo
-    calculateInvoiceTaskCommission(@RequestParam("customerID")int customerID,
-                                   @RequestParam("invoiceID")int invoiceID,
-                                   @RequestParam("taskID")int taskID,
-                                   @RequestParam("orderNumber")int orderNumber,
-                                   @RequestParam("employeeID")int employeeID) {
+    calculateInvoiceTaskCommission(int customerID,
+                                   int invoiceID,
+                                   int taskID,
+                                   int orderNumber,
+                                   int employeeID) {
         CustomerLevelService.CustomerLevelCalculatedCommissionInfo customerLevelCommInfo = this.customerLevelService.calculateInvoiceTaskCommission(customerID, invoiceID, taskID, orderNumber, employeeID);
         InvoiceLevelService.InvoiceLevelCalculatedCommissionInfo invoiceLevelCommInfo = this.invoiceLevelService.calculateInvoiceTaskCommission(customerID, invoiceID, taskID, orderNumber, employeeID);
 
