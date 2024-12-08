@@ -359,7 +359,7 @@ public class CustomerLevelDao {
                     FROM [intrafisher].[dbo].[invoiceItems]
                         INNER JOIN [intrafisher].[dbo].[invTasks] as t1 on [task] = t1.id
                         INNER JOIN [intrafisher].[dbo].[invDepts] as t2 on t1.dept = t2.id
-
+                    
                     WHERE [invoice] = @invoiceId
                     ORDER BY [order] ASC
                     """;
