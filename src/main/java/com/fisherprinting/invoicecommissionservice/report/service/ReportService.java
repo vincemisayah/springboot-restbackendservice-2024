@@ -5,6 +5,8 @@ import com.fisherprinting.invoicecommissionservice.invoiceLevel.dao.InvoiceLevel
 import com.fisherprinting.invoicecommissionservice.invoiceLevel.service.InvoiceLevelService;
 import com.fisherprinting.invoicecommissionservice.report.dao.ReportDao;
 import com.fisherprinting.invoicecommissionservice.report.dtos.DataTransferObjectsContainer;
+import com.fisherprinting.invoicecommissionservice.subcontract.dao.SubcontractDao;
+import com.fisherprinting.invoicecommissionservice.subcontract.service.SubcontractService;
 import com.itextpdf.kernel.colors.ColorConstants;
 import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.PdfPTable;
@@ -46,12 +48,16 @@ public class ReportService {
     private final InvoiceLevelDao invoiceLevelDao;
     private final CustomerLevelService customerLevelService;
     private final InvoiceLevelService invoiceLevelService;
+    private final SubcontractDao subcontractDao;
+    private final SubcontractService subcontractService;
 
-    public ReportService(ReportDao reportDao, InvoiceLevelDao invoiceLevelDao, CustomerLevelService customerLevelService, InvoiceLevelService invoiceLevelService) {
+    public ReportService(ReportDao reportDao, InvoiceLevelDao invoiceLevelDao, CustomerLevelService customerLevelService, InvoiceLevelService invoiceLevelService, SubcontractDao subcontractDao, SubcontractService subcontractService) {
         this.reportDao = reportDao;
         this.invoiceLevelDao = invoiceLevelDao;
         this.customerLevelService = customerLevelService;
         this.invoiceLevelService = invoiceLevelService;
+        this.subcontractDao = subcontractDao;
+        this.subcontractService = subcontractService;
     }
 
 
@@ -62,8 +68,9 @@ public class ReportService {
         // TODO: Filter out which invoices are paid
         List<Integer> invoiceIds = new ArrayList<>();
 //        invoiceIds.add(208072);
-        invoiceIds.add(200001);
-//        invoiceIds.add(207043);
+        invoiceIds.add(209072);
+//        invoiceIds.add(209073);
+//        invoiceIds.add(200001);
 
         InputStream inputStream = null;
         try{
@@ -398,10 +405,41 @@ public class ReportService {
                                    int invoiceID,
                                    int taskID,
                                    int orderNumber,
-                                   int employeeID) {
+                                   int employeeID)
+    {
+        SubcontractService.SubcontractLevelCalculatedCommissionInfo subcontractLevelCommInfo = this.subcontractService.calculateInvoiceTaskCommission(customerID, invoiceID, taskID, orderNumber, employeeID);
         CustomerLevelService.CustomerLevelCalculatedCommissionInfo customerLevelCommInfo = this.customerLevelService.calculateInvoiceTaskCommission(customerID, invoiceID, taskID, orderNumber, employeeID);
         InvoiceLevelService.InvoiceLevelCalculatedCommissionInfo invoiceLevelCommInfo = this.invoiceLevelService.calculateInvoiceTaskCommission(customerID, invoiceID, taskID, orderNumber, employeeID);
 
+
+        // TODO: 1. Calculate the Task Rate Percentage (which in this case is the Subcontract Percentage).
+        //  A. Acquire the following variables from Subcontract DAO
+        //      VAR-A: <PO Price> of the linked invoiceID/TaskID
+        //      VAR-B: <Summation of the 'amounts' of the invoice task items that have the same Task IDs>
+        //
+        //      Formula:
+        //          Subcontract % = VAR-A / VAR-B
+        if(subcontractLevelCommInfo != null){
+            String configLevel = "SUBCONTRACT LEVEL";
+            BigDecimal amount = subcontractLevelCommInfo.amount();
+            BigDecimal taskRate = subcontractLevelCommInfo.taskRate();
+            BigDecimal taskCommissionDollarValue = subcontractLevelCommInfo.taskCommissionDollarValue();
+            BigDecimal salesPersonAssignedRate = subcontractLevelCommInfo.salesPersonAssignedRate();
+            BigDecimal salesDollarValue = subcontractLevelCommInfo.salesDollarValue();
+            String taskRateNote = subcontractLevelCommInfo.taskRateNote();
+            String salesPersonAssignedRateNote = subcontractLevelCommInfo.salesPersonAssignedRateNote();
+            String assignedBy = subcontractLevelCommInfo.assignedBy();
+
+            return new DataTransferObjectsContainer.FinalSalesCalculatedCommissionInfo(
+                    configLevel,amount,taskRate,
+                    taskCommissionDollarValue,
+                    salesPersonAssignedRate,salesDollarValue,
+                    taskRateNote,salesPersonAssignedRateNote,assignedBy);
+        }
+
+        // At this point, since the Invoice ID is not linked to any PO,
+        // we'll resort to using the Customer or Invoice Level Configurations to
+        // calculate the salesperson's commission
         if(invoiceLevelCommInfo != null) {
             String configLevel = "INVOICE LEVEL";
             BigDecimal amount = invoiceLevelCommInfo.amount();

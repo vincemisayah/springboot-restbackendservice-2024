@@ -47,7 +47,7 @@ public class InvoiceLevelService {
         // 4 Salesperson assigned rate info
         InvoiceLevelDao.EmployeeTaskRateInfo salesPersonAssignedRateInfo = invoiceLevelDao.getEmployeeTaskRateInfo(invoiceID, employeeID, taskID);
         BigDecimal salesPersonAssignedRate = (salesPersonAssignedRateInfo != null ? salesPersonAssignedRateInfo.commRate() : BigDecimal.ZERO);
-        String salesNotes =(salesPersonAssignedRateInfo != null) ?salesPersonAssignedRateInfo.notes():"";
+        String salesNotes = (salesPersonAssignedRateInfo != null) ?salesPersonAssignedRateInfo.notes():"";
 
         // 5 Calculated Sales Commission Dollar Value
         BigDecimal salesCommissionValue = taskCommissionValue.multiply(salesPersonAssignedRate.divide(new BigDecimal(100), scale, RoundingMode.CEILING));
