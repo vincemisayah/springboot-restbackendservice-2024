@@ -1,5 +1,8 @@
 package com.fisherprinting.invoicecommissionservice.report.service;
 
+import com.fisherprinting.invoicecommissionservice.customerLevel.dao.CustomerLevelDao;
+import com.fisherprinting.invoicecommissionservice.customerLevel.model.CustomerInfo;
+import com.fisherprinting.invoicecommissionservice.customerLevel.model.SalesPerson;
 import com.fisherprinting.invoicecommissionservice.customerLevel.service.CustomerLevelService;
 import com.fisherprinting.invoicecommissionservice.invoiceLevel.dao.InvoiceLevelDao;
 import com.fisherprinting.invoicecommissionservice.invoiceLevel.service.InvoiceLevelService;
@@ -50,14 +53,16 @@ public class ReportService {
     private final InvoiceLevelService invoiceLevelService;
     private final SubcontractDao subcontractDao;
     private final SubcontractService subcontractService;
+    private final CustomerLevelDao customerLevelDao;
 
-    public ReportService(ReportDao reportDao, InvoiceLevelDao invoiceLevelDao, CustomerLevelService customerLevelService, InvoiceLevelService invoiceLevelService, SubcontractDao subcontractDao, SubcontractService subcontractService) {
+    public ReportService(ReportDao reportDao, InvoiceLevelDao invoiceLevelDao, CustomerLevelService customerLevelService, InvoiceLevelService invoiceLevelService, SubcontractDao subcontractDao, SubcontractService subcontractService, CustomerLevelDao customerLevelDao) {
         this.reportDao = reportDao;
         this.invoiceLevelDao = invoiceLevelDao;
         this.customerLevelService = customerLevelService;
         this.invoiceLevelService = invoiceLevelService;
         this.subcontractDao = subcontractDao;
         this.subcontractService = subcontractService;
+        this.customerLevelDao = customerLevelDao;
     }
 
 
@@ -67,10 +72,10 @@ public class ReportService {
 
         // TODO: Filter out which invoices are paid
         List<Integer> invoiceIds = new ArrayList<>();
-//        invoiceIds.add(208072);
+        invoiceIds.add(200001); // Change empID for this invoice to 633
+        invoiceIds.add(208072);
         invoiceIds.add(209072);
-//        invoiceIds.add(209073);
-//        invoiceIds.add(200001);
+        invoiceIds.add(209073);
 
         InputStream inputStream = null;
         try{
@@ -89,6 +94,25 @@ public class ReportService {
             document.add(p);
 
             for(int i = 0; i < invoiceIds.size(); i++){
+                // Check if the empID salesperson is assigned to the current invoice.
+                CustomerInfo customerInfo = customerLevelService.getCustomerInfoByInvoiceId(invoiceIds.get(i));
+
+                boolean salespersonIsAssignedToThisInvoice = false;
+                for(SalesPerson s:customerInfo.getSalesPersonList()) {
+                    if(s.salesPersonId == empID){
+                        salespersonIsAssignedToThisInvoice = true;
+                    }
+                }
+                if(!salespersonIsAssignedToThisInvoice){
+                    p = new Paragraph();
+                    p.add("\n");
+                    Font font = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 8, BaseColor.BLACK);
+                    Chunk chunkInvoiceId = new Chunk((i+1) + ". INVOICE ID: " + invoiceIds.get(i) + ": NOT ASSIGNED", font);
+                    p.add(chunkInvoiceId);
+                    document.add(p);
+                    continue;
+                }
+
                 int invoiceId = invoiceIds.get(i);
                 DataTransferObjectsContainer.InvoiceInfo invoiceInfo = reportDao.getInvoiceInfo(invoiceId);
                 BigDecimal invoiceTotal = reportDao.getInvoiceTotal(invoiceId);
@@ -175,8 +199,17 @@ public class ReportService {
                         table.addCell(c9);
                     }
 
+                    String configLevel = "";
+                    if(calculatedCommissionInfo != null && calculatedCommissionInfo.configLevel().equals("SUBCONTRACT LEVEL")){
+                        configLevel = " (SC)";
+                    }else if(calculatedCommissionInfo != null && calculatedCommissionInfo.configLevel().equals("INVOICE LEVEL")){
+                        configLevel = " (INV)";
+                    }else if(calculatedCommissionInfo != null && calculatedCommissionInfo.configLevel().equals("CUSTOMER LEVEL")){
+                        configLevel = " (CST)";
+                    }
+
                     Font tableFont = FontFactory.getFont(FontFactory.HELVETICA, 7, BaseColor.BLACK);
-                    PdfPCell cell1 = new PdfPCell(new Paragraph(item.taskName(), tableFont));
+                    PdfPCell cell1 = new PdfPCell(new Paragraph(item.taskName() + configLevel, tableFont));
                     PdfPCell cell2 = new PdfPCell(new Paragraph(item.deptName(), tableFont));
                     PdfPCell cell3 = new PdfPCell(new Paragraph(new DecimalFormat("0.#").format(item.qty()), tableFont));
                     PdfPCell cell4 = new PdfPCell(new Paragraph("$" + String.valueOf(item.cost()), tableFont));

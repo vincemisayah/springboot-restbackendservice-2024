@@ -91,6 +91,9 @@ public class CustomerLevelService {
 
         // 4 Salesperson assigned rate info
         CustomerLevelDao.EmployeeTaskRateInfo salesPersonAssignedRateInfo = customerLevelDao.getEmployeeTaskRateInfo(customerID, employeeID, taskID);
+        if(salesPersonAssignedRateInfo == null)
+            return null;
+
         BigDecimal salesPersonAssignedRate = salesPersonAssignedRateInfo.commRate();
 
         // 5 Calculated Sales Commission Dollar Value

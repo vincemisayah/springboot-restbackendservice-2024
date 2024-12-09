@@ -30,6 +30,10 @@ public class SubcontractService {
     public BigDecimal subcontractPercentage(int invoiceID, int taskID){
         BigDecimal poPrice_varA = subcontractDao.invoiceTaskIdPurchaseOrderItemPrice(invoiceID, taskID);
         BigDecimal summedTaskIdsAmount = subcontractDao.getSummedInvoiceTaskIdsAmount(invoiceID, taskID);
+        if(summedTaskIdsAmount.equals(new BigDecimal("0.00"))){
+            return new BigDecimal(0);
+        }
+
         BigDecimal dividend = new BigDecimal(poPrice_varA.divide(summedTaskIdsAmount, 2, BigDecimal.ROUND_HALF_UP).doubleValue());
         return dividend.multiply(new BigDecimal("100"));
     }
@@ -53,12 +57,17 @@ public class SubcontractService {
             return null;
         }
 
+
         List<InvoiceLevelDao.InvoiceChargedTaskItem> invoiceChargedTaskItems = invoiceLevelDao.getInvoiceChargedItems(invoiceID);
         invoiceChargedTaskItems.removeIf(n->n.order() != orderNumber);
         InvoiceLevelDao.InvoiceChargedTaskItem invoiceItem = invoiceChargedTaskItems.getFirst();
 
         CustomerLevelService.CustomerLevelCalculatedCommissionInfo customerLevelCommInfo = this.customerLevelService.calculateInvoiceTaskCommission(customerID, invoiceID, taskID, orderNumber, employeeID);
         InvoiceLevelService.InvoiceLevelCalculatedCommissionInfo invoiceLevelCommInfo = this.invoiceLevelService.calculateInvoiceTaskCommission(customerID, invoiceID, taskID, orderNumber, employeeID);
+        if(invoiceLevelCommInfo == null && customerLevelCommInfo == null){
+            return null;
+        }
+
         // 1 Invoice Task total amount
         BigDecimal amount = invoiceItem.amount();
 
