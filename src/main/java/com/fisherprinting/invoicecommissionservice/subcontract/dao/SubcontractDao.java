@@ -134,8 +134,6 @@ public class SubcontractDao {
     }
 
     public Boolean invoiceIsLinkedToPO(int invoiceID, int taskID) throws DataAccessException {
-        boolean isLinkedToPO = false;
-
         String sql = """
                     DECLARE @INVOICE_ID INT = :invoiceID               \s
                     DECLARE @TASK_ID INT = :taskID
@@ -195,7 +193,6 @@ public class SubcontractDao {
                     FROM [intrafisher].[dbo].[invoiceItems]
                         INNER JOIN [intrafisher].[dbo].[invTasks] as t1 on [task] = t1.id
                         INNER JOIN [intrafisher].[dbo].[invDepts] as t2 on t1.dept = t2.id
-                                       \s
                     WHERE [invoice] = @INVOICE_ID
                         AND [task] = @TASK_ID
                     """;
