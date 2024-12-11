@@ -63,8 +63,8 @@ public class FileUploadService {
                         case 0 -> invoiceID = (parseInvoiceId(cell.getStringCellValue()) != null)? parseInvoiceId(cell.getStringCellValue()): null;
                         case 1 -> invoiceDate = convertToSqlDate(cell.getNumericCellValue());
                         case 2 -> datePaid = convertToSqlDate(cell.getNumericCellValue());
-                        case 3 -> invoiceTotal = new BigDecimal(cell.getNumericCellValue());
-                        case 4 -> amountPaid = new BigDecimal(cell.getNumericCellValue());
+                        case 3 -> invoiceTotal = BigDecimal.valueOf(cell.getNumericCellValue());
+                        case 4 -> amountPaid = BigDecimal.valueOf(cell.getNumericCellValue());
                         default -> { }
                     }
                     if(invoiceID == null)
@@ -99,7 +99,6 @@ public class FileUploadService {
         }
 
         String invoiceID = parsedDate[0];
-        String IN = parsedDate[1];
         return Integer.parseInt(invoiceID);
     }
 }

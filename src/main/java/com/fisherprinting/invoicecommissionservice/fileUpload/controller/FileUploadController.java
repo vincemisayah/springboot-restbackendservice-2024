@@ -15,9 +15,10 @@ import java.util.Map;
 public class FileUploadController {
     private final FileUploadService fileUploadService;
 
-    @PostMapping("/excelFile")
+    @PostMapping("/excelFile/filterPaidInvoices")
     public ResponseEntity<?> excelFile(@RequestParam("empID") Integer empID, @RequestParam("file") MultipartFile file) {
-        fileUploadService.processPaidInvoiceExcelFile(empID, file);
-        return ResponseEntity.ok().body(Map.of("Message", "Upload success."));
+        if(fileUploadService.processPaidInvoiceExcelFile(empID, file))
+            return ResponseEntity.ok().body(Map.of("Message", "Upload success."));
+        return ResponseEntity.internalServerError().body(Map.of("Message", "Upload attempt failed."));
     }
 }
