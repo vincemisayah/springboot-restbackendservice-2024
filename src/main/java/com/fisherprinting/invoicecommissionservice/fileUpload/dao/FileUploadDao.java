@@ -43,7 +43,7 @@ public class FileUploadDao {
         return template.update(sql, parameters);
     }
 
-    public List<DTOs.PaidInvoiceInfo> getFullyPaidInvoicesListFromBuffer(int uploaderEmpID, DTOs.PaidInvoiceInfo paidInvoiceInfo) {
+    public List<DTOs.PaidInvoiceInfo> getShortPaidInvoicesListFromBuffer(int uploaderEmpID) {
         List<DTOs.PaidInvoiceInfo> list = new ArrayList<>();
         String sql = """
                     SELECT [uploadedBy]
@@ -54,11 +54,14 @@ public class FileUploadDao {
                           ,[invoiceTotal]
                           ,[amountPaid]
                       FROM [intrafisher].[dbo].[InvComm_toFilterPaidInvoicesBuffer]
-                      WHERE [invoiceTotal] = [amountPaid]
+                      WHERE ABS([invoiceTotal]) > ABS([amountPaid])
+                        AND [uploadedBy] = :uploaderEmpID
                       ORDER BY invoiceDate
                     """;
 
         MapSqlParameterSource parameters = new MapSqlParameterSource();
+        parameters.addValue("uploaderEmpID", uploaderEmpID);
+
         List<Map<String, Object>> rows = template.queryForList(sql, parameters);
         for (Map<String, Object> row : rows) {
             int uploadedBy = (int) row.get("uploadedBy");
@@ -69,9 +72,90 @@ public class FileUploadDao {
             BigDecimal invoiceTotal = (BigDecimal) row.get("invoiceTotal");
             BigDecimal amountPaid = (BigDecimal) row.get("amountPaid");
 
-            DTOs.PaidInvoiceInfo data = new DTOs.PaidInvoiceInfo(uploadedBy, new Timestamp(System.currentTimeMillis()), invoiceID, invoiceDate, datePaid, invoiceTotal, amountPaid);
+            DTOs.PaidInvoiceInfo data = new DTOs.PaidInvoiceInfo(uploadedBy, uploadDatetime, invoiceID, invoiceDate, datePaid, invoiceTotal, amountPaid);
             list.add(data);
         }
         return list;
+    }
+
+    public List<DTOs.PaidInvoiceInfo> getFullyPaidInvoicesListFromBuffer(int uploaderEmpID) {
+        List<DTOs.PaidInvoiceInfo> list = new ArrayList<>();
+        String sql = """
+                    SELECT [uploadedBy]
+                          ,[uploadDatetime]
+                          ,[invoiceID]
+                          ,[invoiceDate]
+                          ,[datePaid]
+                          ,[invoiceTotal]
+                          ,[amountPaid]
+                      FROM [intrafisher].[dbo].[InvComm_toFilterPaidInvoicesBuffer]
+                      WHERE ABS([invoiceTotal]) <= ABS([amountPaid])
+                        AND [uploadedBy] = :uploaderEmpID
+                      ORDER BY invoiceDate
+                    """;
+
+        MapSqlParameterSource parameters = new MapSqlParameterSource();
+        parameters.addValue("uploaderEmpID", uploaderEmpID);
+
+        List<Map<String, Object>> rows = template.queryForList(sql, parameters);
+        for (Map<String, Object> row : rows) {
+            int uploadedBy = (int) row.get("uploadedBy");
+            Timestamp uploadDatetime = (Timestamp) row.get("uploadDatetime");
+            int invoiceID = (int) row.get("invoiceID");
+            Date invoiceDate = (Date) row.get("invoiceDate");
+            Date datePaid = (Date) row.get("datePaid");
+            BigDecimal invoiceTotal = (BigDecimal) row.get("invoiceTotal");
+            BigDecimal amountPaid = (BigDecimal) row.get("amountPaid");
+
+            DTOs.PaidInvoiceInfo data = new DTOs.PaidInvoiceInfo(uploadedBy, uploadDatetime, invoiceID, invoiceDate, datePaid, invoiceTotal, amountPaid);
+            list.add(data);
+        }
+        return list;
+    }
+
+    public List<DTOs.PaidInvoiceInfo> getOverPaidInvoicesListFromBuffer(int uploaderEmpID) {
+        List<DTOs.PaidInvoiceInfo> list = new ArrayList<>();
+        String sql = """
+                    SELECT [uploadedBy]
+                          ,[uploadDatetime]
+                          ,[invoiceID]
+                          ,[invoiceDate]
+                          ,[datePaid]
+                          ,[invoiceTotal]
+                          ,[amountPaid]
+                      FROM [intrafisher].[dbo].[InvComm_toFilterPaidInvoicesBuffer]
+                      WHERE ABS([invoiceTotal]) < ABS([amountPaid])
+                        AND [uploadedBy] = :uploaderEmpID
+                      ORDER BY invoiceDate
+                    """;
+
+        MapSqlParameterSource parameters = new MapSqlParameterSource();
+        parameters.addValue("uploaderEmpID", uploaderEmpID);
+
+        List<Map<String, Object>> rows = template.queryForList(sql, parameters);
+        for (Map<String, Object> row : rows) {
+            int uploadedBy = (int) row.get("uploadedBy");
+            Timestamp uploadDatetime = (Timestamp) row.get("uploadDatetime");
+            int invoiceID = (int) row.get("invoiceID");
+            Date invoiceDate = (Date) row.get("invoiceDate");
+            Date datePaid = (Date) row.get("datePaid");
+            BigDecimal invoiceTotal = (BigDecimal) row.get("invoiceTotal");
+            BigDecimal amountPaid = (BigDecimal) row.get("amountPaid");
+
+            DTOs.PaidInvoiceInfo data = new DTOs.PaidInvoiceInfo(uploadedBy, uploadDatetime, invoiceID, invoiceDate, datePaid, invoiceTotal, amountPaid);
+            list.add(data);
+        }
+        return list;
+    }
+
+    public int deletePaidInvoiceDataFromBuffer(int empID) {
+        String sql = """
+                    DELETE FROM [intrafisher].[dbo].[InvComm_toFilterPaidInvoicesBuffer]
+                    WHERE uploadedBy = :empID
+                    """;
+
+        MapSqlParameterSource parameters = new MapSqlParameterSource();
+        parameters.addValue("empID", empID);
+        return template.update(sql, parameters);
     }
 }

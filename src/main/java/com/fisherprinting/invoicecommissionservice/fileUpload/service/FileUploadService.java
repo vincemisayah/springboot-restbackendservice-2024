@@ -17,9 +17,7 @@ import java.sql.Date;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Calendar;
-import java.util.Iterator;
-import java.util.Objects;
+import java.util.*;
 
 @AllArgsConstructor
 @Service
@@ -101,4 +99,14 @@ public class FileUploadService {
         String invoiceID = parsedDate[0];
         return Integer.parseInt(invoiceID);
     }
+
+//    public List<DTOs.PaidInvoiceInfo> filterPaidInvoicesFromFile(Integer empID, MultipartFile file){
+//        List<DTOs.PaidInvoiceInfo> list = new ArrayList<>();
+//        if(processPaidInvoiceExcelFile(empID, file))
+//            list = fileUploadDao.getFullyPaidInvoicesListFromBuffer(empID);
+//        fileUploadDao.deletePaidInvoiceDataFromBuffer(empID);
+//        return list;
+//    }
+
+
 }
