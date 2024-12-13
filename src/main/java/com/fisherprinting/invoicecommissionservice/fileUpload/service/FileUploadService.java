@@ -110,23 +110,35 @@ public class FileUploadService {
 //        fileUploadDao.deletePaidInvoiceDataFromBuffer(empID);
 //        return list;
 //    }
-    public List<DTOs.ViewableFilteredInvoiceData> viewableFilteredInvoiceData(List<DTOs.PaidInvoiceInfo> list) throws ParseException {
-        List<DTOs.ViewableFilteredInvoiceData> toReturnList = new ArrayList<>();
-
+    public List<DTOs.PaidInvoiceInfo> removeDuplicates(List<DTOs.PaidInvoiceInfo> paidInvoiceInfoList){
         TreeSet<Integer> setInvoiceID = new TreeSet<>();
-        for(DTOs.PaidInvoiceInfo paidInvoiceInfo: list){
+        for(DTOs.PaidInvoiceInfo paidInvoiceInfo: paidInvoiceInfoList){
             setInvoiceID.add(paidInvoiceInfo.invoiceID());
         }
 
-
-
         List<DTOs.PaidInvoiceInfo> removedDups = new ArrayList<>();
         for(Integer invoiceID: setInvoiceID){
-            list.stream().filter(n->n.invoiceID() == invoiceID).findFirst().ifPresent(n->removedDups.add(n));
+            paidInvoiceInfoList.stream().filter(n->n.invoiceID() == invoiceID).findFirst().ifPresent(n->removedDups.add(n));
         }
+        return removedDups;
+    }
 
+    public List<DTOs.ViewableFilteredInvoiceData> viewableFilteredInvoiceData(List<DTOs.PaidInvoiceInfo> list) throws ParseException {
+        List<DTOs.ViewableFilteredInvoiceData> toReturnList = new ArrayList<>();
+//
+//        TreeSet<Integer> setInvoiceID = new TreeSet<>();
+//        for(DTOs.PaidInvoiceInfo paidInvoiceInfo: list){
+//            setInvoiceID.add(paidInvoiceInfo.invoiceID());
+//        }
+//
+//
+//
+//        List<DTOs.PaidInvoiceInfo> removedDups = new ArrayList<>();
+//        for(Integer invoiceID: setInvoiceID){
+//            list.stream().filter(n->n.invoiceID() == invoiceID).findFirst().ifPresent(n->removedDups.add(n));
+//        }
 
-
+        List<DTOs.PaidInvoiceInfo> removedDups = removeDuplicates(list);
 
         NumberFormat currencyFormatter = NumberFormat.getCurrencyInstance(Locale.US);
         SimpleDateFormat dateFormatter = new SimpleDateFormat("MM/dd/yyyy");

@@ -123,45 +123,4 @@ public class CustomerLevelController {
     public CustomerLevelDao.EmployeeTaskRateInfo EmployeeRateInfo(@RequestParam("customerID") int customerID, @RequestParam("empID") int empID, @RequestParam("taskID") int taskID) {
         return customerLevelDao.getEmployeeTaskRateInfo(customerID, empID, taskID);
     }
-
-
-//    @MessageMapping("/upload")
-//    public void handleUpload(@Payload List<Object> jsonArray) {
-//        int totalItems = jsonArray.size();
-//        int processedItems = 0;
-//
-//        for (Object item : jsonArray) {
-//            // Process the item (e.g., save to database)
-//            processedItems++;
-//
-//            // Send progress update
-//            double progress = (double) processedItems / totalItems;
-//            messagingTemplate.convertAndSend("/topic/upload-progress", progress);
-//        }
-//    }
-
-//    @MessageMapping("/upload")
-//    public void handleUpload( ) {
-//        int totalItems = 200000;
-//        int processedItems = 0;
-//
-//        for(int i = 0; i < totalItems; i++) {
-//            processedItems++;
-//            double progress = (double) processedItems / totalItems;
-//            messagingTemplate.convertAndSend("/topic/upload-progress", progress);
-//        }
-//    }
-//
-//    @MessageMapping("/chat")
-//    @SendTo("/topic/messages")
-//    public String send(String message) throws Exception {
-//        return "test";
-//    }
-
-    @MessageMapping("/hello")
-    @SendTo("/topic/greetings")
-    public String greet(){
-        return "Hello World";
-    }
-
 }

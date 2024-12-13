@@ -3,6 +3,7 @@ package com.fisherprinting.invoicecommissionservice.fileUpload.dao;
 import com.fisherprinting.invoicecommissionservice.customerLevel.dao.CustomerLevelDao;
 import com.fisherprinting.invoicecommissionservice.fileUpload.DTOs.DTOs;
 import lombok.AllArgsConstructor;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -89,7 +90,7 @@ public class FileUploadDao {
                           ,[invoiceTotal]
                           ,[amountPaid]
                       FROM [intrafisher].[dbo].[InvComm_toFilterPaidInvoicesBuffer]
-                      WHERE ABS([invoiceTotal]) <= ABS([amountPaid])
+                      WHERE ABS([invoiceTotal]) = ABS([amountPaid])
                         AND [uploadedBy] = :uploaderEmpID
                       ORDER BY invoiceDate
                     """;
@@ -188,5 +189,61 @@ public class FileUploadDao {
             list.add(data);
         }
         return list;
+    }
+
+    public int saveInvoiceData(DTOs.PaidInvoiceInfo invoiceData) throws DataAccessException {
+        int rowsAffected = 0;
+        String sql = """
+                    DECLARE @invoiceID INT = :invoiceID
+                    DECLARE @invoiceDate DATE = :invoiceDate
+                    DECLARE @datePaid DATE = :datePaid
+                    DECLARE @invoiceTotal DECIMAL(18,2) = :invoiceTotal
+                    DECLARE @amountPaid DECIMAL(18,2) = :amountPaid
+                    DECLARE @uploadDatetime DATETIME = :uploadDatetime
+                    DECLARE @uploadedBy INT = :uploadedBy
+                    
+                    
+                    DECLARE @INVOICE_EXIST INT = 0
+                    SET @INVOICE_EXIST = (SELECT COUNT(*)
+                                            FROM [intrafisher].[dbo].[InvComm_RecordsFullyPaidInvoices]
+                                            WHERE [invoiceID] = @invoiceID)
+                    
+                    IF(@INVOICE_EXIST > 0)
+                        BEGIN
+                            UPDATE [intrafisher].[dbo].[InvComm_RecordsFullyPaidInvoices]
+                            SET   [invoiceDate] = @invoiceDate,
+                                  [datePaid] = @datePaid,
+                                  [invoiceTotal] = @invoiceTotal,
+                                  [amountPaid] = @amountPaid,
+                                  [uploadDatetime] = @uploadDatetime,
+                                  [uploadedBy] = @uploadedBy
+                            WHERE [invoiceID] = @invoiceID
+                        END
+                    ELSE
+                        BEGIN
+                            INSERT INTO [intrafisher].[dbo].[InvComm_RecordsFullyPaidInvoices]
+                                      ([invoiceID]
+                                      ,[invoiceDate]
+                                      ,[datePaid]
+                                      ,[invoiceTotal]
+                                      ,[amountPaid]
+                                      ,[uploadDatetime]
+                                      ,[uploadedBy])
+                            VALUES(@invoiceID, @invoiceDate, @datePaid, @invoiceTotal,
+                                   @amountPaid, @uploadDatetime,@uploadedBy)
+                        END
+                    """;
+
+        MapSqlParameterSource parameters = new MapSqlParameterSource();
+        parameters.addValue("invoiceID", invoiceData.invoiceID());
+        parameters.addValue("invoiceDate", invoiceData.invoiceDate());
+        parameters.addValue("datePaid", invoiceData.datePaid());
+        parameters.addValue("invoiceTotal", invoiceData.invoiceTotal());
+        parameters.addValue("amountPaid", invoiceData.amountPaid());
+        parameters.addValue("uploadDatetime", invoiceData.uploadDatetime());
+        parameters.addValue("uploadedBy", invoiceData.uploadedBy());
+
+        rowsAffected = template.update(sql, parameters);
+        return rowsAffected;
     }
 }
