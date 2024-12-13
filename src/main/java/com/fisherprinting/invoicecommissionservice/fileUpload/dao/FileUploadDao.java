@@ -158,4 +158,35 @@ public class FileUploadDao {
         parameters.addValue("empID", empID);
         return template.update(sql, parameters);
     }
+
+    public List<DTOs.InvoiceDup> invoiceDupListFromBuffer(int uploaderEmpID) {
+        List<DTOs.InvoiceDup> list = new ArrayList<>();
+        String sql = """
+                    SELECT [invoiceID], invoiceCount
+                    FROM (
+                        SELECT
+                            [invoiceID],
+                            COUNT([invoiceID]) as invoiceCount
+                        FROM [intrafisher].[dbo].[InvComm_toFilterPaidInvoicesBuffer]
+                        WHERE ABS([invoiceTotal]) = ABS([amountPaid])
+                            and uploadedBy = :uploaderEmpID
+                        GROUP BY [invoiceID]
+                    ) AS T1
+                    WHERE invoiceCount > 1
+                    ORDER BY [invoiceID]
+                    """;
+
+        MapSqlParameterSource parameters = new MapSqlParameterSource();
+        parameters.addValue("uploaderEmpID", uploaderEmpID);
+
+        List<Map<String, Object>> rows = template.queryForList(sql, parameters);
+        for (Map<String, Object> row : rows) {
+            int invoiceID = (int) row.get("invoiceID");
+            int count = (int) row.get("invoiceCount");
+
+            DTOs.InvoiceDup data = new DTOs.InvoiceDup(invoiceID, count);
+            list.add(data);
+        }
+        return list;
+    }
 }

@@ -13,4 +13,15 @@ public class DTOs {
       Date datePaid,
       BigDecimal invoiceTotal,
       BigDecimal amountPaid){ }
+
+    public record ViewableFilteredInvoiceData(
+            int RowNumber,
+            int InvoiceID,
+            String InvoiceDate,
+            String DatePaid,
+            String InvoiceTotal,
+            String AmountPaid
+    ){ }
+
+    public record InvoiceDup(int invoiceID, int count){ }
 }

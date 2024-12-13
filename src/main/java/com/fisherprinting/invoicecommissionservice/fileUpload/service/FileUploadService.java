@@ -15,9 +15,12 @@ import java.io.InputStream;
 import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.Timestamp;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.text.NumberFormat;
 
 @AllArgsConstructor
 @Service
@@ -107,6 +110,40 @@ public class FileUploadService {
 //        fileUploadDao.deletePaidInvoiceDataFromBuffer(empID);
 //        return list;
 //    }
+    public List<DTOs.ViewableFilteredInvoiceData> viewableFilteredInvoiceData(List<DTOs.PaidInvoiceInfo> list) throws ParseException {
+        List<DTOs.ViewableFilteredInvoiceData> toReturnList = new ArrayList<>();
 
+        TreeSet<Integer> setInvoiceID = new TreeSet<>();
+        for(DTOs.PaidInvoiceInfo paidInvoiceInfo: list){
+            setInvoiceID.add(paidInvoiceInfo.invoiceID());
+        }
+
+
+
+        List<DTOs.PaidInvoiceInfo> removedDups = new ArrayList<>();
+        for(Integer invoiceID: setInvoiceID){
+            list.stream().filter(n->n.invoiceID() == invoiceID).findFirst().ifPresent(n->removedDups.add(n));
+        }
+
+
+
+
+        NumberFormat currencyFormatter = NumberFormat.getCurrencyInstance(Locale.US);
+        SimpleDateFormat dateFormatter = new SimpleDateFormat("MM/dd/yyyy");
+
+        int counter = 0;
+        for(DTOs.PaidInvoiceInfo paidInvoiceInfo: removedDups){
+            int rowNumber = (++counter);
+            int invoiceID = paidInvoiceInfo.invoiceID();
+            String invoiceDate = dateFormatter.format(paidInvoiceInfo.invoiceDate());
+            String datePaid = dateFormatter.format(paidInvoiceInfo.datePaid());
+            String invoiceTotal = currencyFormatter.format(paidInvoiceInfo.invoiceTotal());
+            String amountPaid = currencyFormatter.format(paidInvoiceInfo.amountPaid());
+
+            DTOs.ViewableFilteredInvoiceData data = new DTOs.ViewableFilteredInvoiceData(rowNumber, invoiceID, invoiceDate, datePaid, invoiceTotal, amountPaid);
+            toReturnList.add(data);
+        }
+        return toReturnList;
+    }
 
 }
