@@ -191,6 +191,8 @@ public class FileUploadDao {
         return list;
     }
 
+
+
     public int saveInvoiceData(DTOs.PaidInvoiceInfo invoiceData) throws DataAccessException {
         int rowsAffected = 0;
         String sql = """
@@ -245,5 +247,26 @@ public class FileUploadDao {
 
         rowsAffected = template.update(sql, parameters);
         return rowsAffected;
+    }
+
+    public Boolean invoiceFound(int invoiceID) {
+        List<DTOs.InvoiceDup> list = new ArrayList<>();
+        String sql = """
+                    DECLARE @INVOICE_ID INT = :invoiceID
+                    
+                    SELECT COUNT(*) as invoiceCount
+                    FROM invoices
+                    WHERE id = @INVOICE_ID
+                    """;
+
+        MapSqlParameterSource parameters = new MapSqlParameterSource();
+        parameters.addValue("invoiceID", invoiceID);
+
+        int invoiceCount = 0;
+        List<Map<String, Object>> rows = template.queryForList(sql, parameters);
+        for (Map<String, Object> row : rows) {
+            invoiceCount = (int) row.get("invoiceCount");
+        }
+        return invoiceCount != 0;
     }
 }

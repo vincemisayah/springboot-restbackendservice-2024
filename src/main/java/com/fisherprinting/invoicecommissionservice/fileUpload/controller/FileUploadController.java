@@ -44,7 +44,6 @@ public class FileUploadController {
             List<DTOs.PaidInvoiceInfo> fullyPaid = fileUploadService.removeDuplicates(fileUploadDao.getFullyPaidInvoicesListFromBuffer(empID));
             List<DTOs.PaidInvoiceInfo> overPaid = fileUploadService.removeDuplicates(fileUploadDao.getOverPaidInvoicesListFromBuffer(empID));
 
-            // The viewableFilteredInvoiceData method removes any existing duplicates from the uploaded file.
             List<DTOs.ViewableFilteredInvoiceData> viewableFullyPaidInvoices = fileUploadService.viewableFilteredInvoiceData(fullyPaid);
             List<DTOs.ViewableFilteredInvoiceData> viewableOverPaidInvoices = fileUploadService.viewableFilteredInvoiceData(overPaid);
             List<DTOs.ViewableFilteredInvoiceData> viewableShortPaidInvoices = fileUploadService.viewableFilteredInvoiceData(shortPaid);
@@ -68,13 +67,20 @@ public class FileUploadController {
 
     @PostMapping("/excelFile/saveInvoiceData")
     public ResponseEntity<?> saveInvoiceData(@RequestBody List<DTOs.PaidInvoiceInfo> invoiceData){
+        List<Integer> unsavedInvoiceIDs = new ArrayList<>();
         int count = 0;
         try {
             for (DTOs.PaidInvoiceInfo paidInvoiceInfo : invoiceData) {
-                fileUploadDao.saveInvoiceData(paidInvoiceInfo);
-                ++count;
+                if(fileUploadDao.invoiceFound(paidInvoiceInfo.invoiceID())){
+                    fileUploadDao.saveInvoiceData(paidInvoiceInfo);
+                    ++count;
+                }else{
+                    unsavedInvoiceIDs.add(paidInvoiceInfo.invoiceID());
+                }
             }
-            return ResponseEntity.ok().body(Map.of("SavedInvoicesCount", count));
+            return ResponseEntity.ok().body(Map.of(
+                    "SavedInvoicesCount", count,
+                    "UnsavedInvoices", unsavedInvoiceIDs));
         }catch (DataAccessException e){
             return ResponseEntity.internalServerError().body(Map.of("SavedInvoicesCount", count));
         }

@@ -4,6 +4,7 @@ import com.fisherprinting.invoicecommissionservice.customerLevel.dao.CustomerLev
 import com.fisherprinting.invoicecommissionservice.customerLevel.model.CustomerInfo;
 import com.fisherprinting.invoicecommissionservice.customerLevel.model.SalesPerson;
 import com.fisherprinting.invoicecommissionservice.customerLevel.service.CustomerLevelService;
+import com.fisherprinting.invoicecommissionservice.fileUpload.DTOs.DTOs;
 import com.fisherprinting.invoicecommissionservice.invoiceLevel.dao.InvoiceLevelDao;
 import com.fisherprinting.invoicecommissionservice.invoiceLevel.service.InvoiceLevelService;
 import com.fisherprinting.invoicecommissionservice.report.dao.ReportDao;
@@ -514,5 +515,22 @@ public class ReportService {
         }
 
         return null;
+    }
+
+    public List<SalesPerson> getSalespersonListByInvoiceID(int invoiceID){
+        CustomerLevelDao.CustomerAndJobInfo customerInfo = customerLevelDao.getCustomerAndJobInfo(invoiceID);
+        List<SalesPerson> salesPersonList = customerLevelDao.getSalesPersonListById(customerInfo.customerID()).getSalesPersonList();
+        return salesPersonList;
+    }
+
+    public List<Integer> getSalespersonListFromInvoiceList(List<DTOs.PaidInvoiceInfo> paidInvoices){
+        TreeSet<Integer> salesPersonTreeSet = new TreeSet<>();
+        for(DTOs.PaidInvoiceInfo paidInvoice : paidInvoices){
+            List<SalesPerson> salesPersonList = getSalespersonListByInvoiceID(paidInvoice.invoiceID());
+            for(SalesPerson salesPerson : salesPersonList){
+                salesPersonTreeSet.add(salesPerson.salesPersonId);
+            }
+        }
+        return new ArrayList<>(salesPersonTreeSet);
     }
 }

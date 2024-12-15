@@ -138,13 +138,13 @@ public class FileUploadService {
 //            list.stream().filter(n->n.invoiceID() == invoiceID).findFirst().ifPresent(n->removedDups.add(n));
 //        }
 
-        List<DTOs.PaidInvoiceInfo> removedDups = removeDuplicates(list);
+//        List<DTOs.PaidInvoiceInfo> removedDups = removeDuplicates(list);
 
         NumberFormat currencyFormatter = NumberFormat.getCurrencyInstance(Locale.US);
         SimpleDateFormat dateFormatter = new SimpleDateFormat("MM/dd/yyyy");
 
         int counter = 0;
-        for(DTOs.PaidInvoiceInfo paidInvoiceInfo: removedDups){
+        for(DTOs.PaidInvoiceInfo paidInvoiceInfo: list){
             int rowNumber = (++counter);
             int invoiceID = paidInvoiceInfo.invoiceID();
             String invoiceDate = dateFormatter.format(paidInvoiceInfo.invoiceDate());
