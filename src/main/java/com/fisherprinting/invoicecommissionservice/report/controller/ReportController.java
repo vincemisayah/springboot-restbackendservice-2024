@@ -131,20 +131,32 @@ public class ReportController {
     public ResponseEntity<?> paidInvoices(@RequestParam("startDate") @DateTimeFormat(pattern = "M/d/yy") LocalDate startDate,
                                           @RequestParam("endDate")   @DateTimeFormat(pattern = "M/d/yy") LocalDate endDate) throws ParseException {
         List<DTOs.PaidInvoiceInfo> paidInvoices = fileUploadService.removeDuplicates(reportDao.getPaidInvoicesFromRecords(startDate, endDate));
-
         List<Integer> salesPersonEmpIDs = reportService.getSalespersonListFromInvoiceList(paidInvoices);
+        List<DTOs.SalespersonAssignedInvoices> salespersonAssignedInvoices = new ArrayList<>();
 
-        List<DTOs.ViewableFilteredInvoiceData> viewablePaidInvoices = fileUploadService.viewableFilteredInvoiceData(paidInvoices);
-
-        Map<String, List<DTOs.PaidInvoiceInfo>> map = new HashMap<>();
         for(Integer empID : salesPersonEmpIDs){
+            String empName = reportDao.getEmployeeNameByID(empID);
+            DTOs.Salesperson salesperson = new DTOs.Salesperson(empID, empName);
             List<DTOs.PaidInvoiceInfo> paidInvoicesAssignedToEmpId = reportDao.getPaidInvoicesFromRecordsByEmpID(empID, startDate, endDate);
-            map.put(empID.toString(), paidInvoicesAssignedToEmpId);
+            salespersonAssignedInvoices.add(new DTOs.SalespersonAssignedInvoices(salesperson, fileUploadService.viewableFilteredInvoiceData(paidInvoicesAssignedToEmpId)));
         }
+        List<DTOs.ViewableFilteredInvoiceData> viewablePaidInvoices = fileUploadService.viewableFilteredInvoiceData(paidInvoices);
 
         return ResponseEntity.ok().body(Map.of(
                 "PaidInvoices", viewablePaidInvoices,
-                "salesPersonEmpIDs", salesPersonEmpIDs,
-                "assignedInvoicesPerSalesperson", map));
+                "SalespersonAssignedInvoices", salespersonAssignedInvoices));
+    }
+
+    @PostMapping("/viewSalespersonPdfReport/{empID}")
+    public ResponseEntity<?> viewSalespersonPdfReport(@PathVariable("empID") Integer empID, @RequestParam("invoiceList") List<Integer> invoiceIDList) throws ParseException {
+        InputStreamResource resource = new InputStreamResource(reportService.getSalespersonCommissionReport(empID, invoiceIDList));
+
+        String empName = reportDao.getEmployeeNameByID(empID).replaceAll(" ", "");
+        String fileName = empName + "-CommissionReport.pdf";
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "inline; filename=" + fileName)
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(resource);
     }
 }

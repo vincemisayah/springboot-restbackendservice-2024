@@ -66,6 +66,271 @@ public class ReportService {
         this.customerLevelDao = customerLevelDao;
     }
 
+    public InputStream getSalespersonCommissionReport(int empID, List<Integer> invoiceIds){
+
+
+//    public InputStream getSalespersonCommissionReport(int empID, List<DTOs.ViewableFilteredInvoiceData> invoiceListObjects){
+//
+//        List<Integer> invoiceIds = new ArrayList<>();
+//        for(DTOs.ViewableFilteredInvoiceData invoiceData : invoiceListObjects){
+//            invoiceIds.add(invoiceData.InvoiceID());
+//        }
+
+        String empName = reportDao.getEmployeeName(empID);
+        InputStream inputStream = null;
+        try{
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+
+            // Create Document and PdfWriter
+            Document document = new Document();
+            PdfWriter.getInstance(document, outputStream);
+
+            document.open();
+
+            Paragraph p = new Paragraph();
+            p.add("Salesperson: " + empName);
+            p.add("\n");
+            document.add(p);
+
+            for(int i = 0; i < invoiceIds.size(); i++){
+                // Check if the empID salesperson is assigned to the current invoice.
+                CustomerInfo customerInfo = customerLevelService.getCustomerInfoByInvoiceId(invoiceIds.get(i));
+
+                boolean salespersonIsAssignedToThisInvoice = false;
+                for(SalesPerson s:customerInfo.getSalesPersonList()) {
+                    if(s.salesPersonId == empID){
+                        salespersonIsAssignedToThisInvoice = true;
+                    }
+                }
+                if(!salespersonIsAssignedToThisInvoice){
+                    p = new Paragraph();
+                    p.add("\n");
+                    Font font = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 8, BaseColor.BLACK);
+                    Chunk chunkInvoiceId = new Chunk((i+1) + ". INVOICE ID: " + invoiceIds.get(i) + ": NOT ASSIGNED", font);
+                    p.add(chunkInvoiceId);
+                    document.add(p);
+                    continue;
+                }
+
+                int invoiceId = invoiceIds.get(i);
+                DataTransferObjectsContainer.InvoiceInfo invoiceInfo = reportDao.getInvoiceInfo(invoiceId);
+                BigDecimal invoiceTotal = reportDao.getInvoiceTotal(invoiceId);
+
+                p = new Paragraph();
+                p.add("\n");
+                Font font = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 8, BaseColor.BLACK);
+                Chunk chunkInvoiceId = new Chunk((i+1) + ". INVOICE ID: " + invoiceId + "\n", font);
+                p.add(chunkInvoiceId);
+
+                Font fontTablElem = FontFactory.getFont(FontFactory.HELVETICA, 8, BaseColor.BLACK);
+                p.setTabSettings(new TabSettings(20f));
+                p.add(Chunk.TABBING);
+                p.add(new Chunk("\u2022  Customer AR#: " + invoiceInfo.customerAR( ) + "\n", fontTablElem));
+                p.setTabSettings(new TabSettings(20f));
+                p.add(Chunk.TABBING);
+                p.add(new Chunk("\u2022  Customer Name: " + invoiceInfo.customerName( ) + "\n", fontTablElem));
+                p.setTabSettings(new TabSettings(20f));
+                p.add(Chunk.TABBING);
+                p.add(new Chunk("\u2022  Inv. Date: " + invoiceInfo.invoiceDate( ) + "\n", fontTablElem));
+                p.setTabSettings(new TabSettings(20f));
+                p.add(Chunk.TABBING);
+                p.add(new Chunk("\u2022  Inv. Payment Due Date: " + invoiceInfo.paymentDueDate( ) + "\n\n", fontTablElem));
+                document.add(p);
+
+                List<InvoiceLevelDao.InvoiceChargedTaskItem> chargedTaskItems = invoiceLevelDao.getInvoiceChargedItems(invoiceId);
+
+                BigDecimal salesCommissionTotal = new BigDecimal(0);
+
+
+                int count = 0;
+                for(InvoiceLevelDao.InvoiceChargedTaskItem item : chargedTaskItems){
+                    DataTransferObjectsContainer.FinalSalesCalculatedCommissionInfo calculatedCommissionInfo = this.calculateInvoiceTaskCommission(
+                            invoiceInfo.customerId(), invoiceId, item.taskId(), item.order(), empID);
+
+                    salesCommissionTotal = (calculatedCommissionInfo != null)? salesCommissionTotal.add(calculatedCommissionInfo.salesDollarValue()):salesCommissionTotal.add(new BigDecimal(0));
+
+                    PdfPTable table = new PdfPTable(9);
+                    table.setTotalWidth(500);
+                    table.setLockedWidth(true);
+
+                    if(count < 1){
+                        Font tableHeaderFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 7, BaseColor.BLACK);
+                        PdfPCell c1 = new PdfPCell(new Paragraph("Task", tableHeaderFont));
+                        PdfPCell c2 = new PdfPCell(new Paragraph("Dept", tableHeaderFont));
+                        PdfPCell c3 = new PdfPCell(new Paragraph("Qty", tableHeaderFont));
+                        PdfPCell c4 = new PdfPCell(new Paragraph("Cost", tableHeaderFont));
+                        PdfPCell c5 = new PdfPCell(new Paragraph("Amount", tableHeaderFont));
+                        PdfPCell c6 = new PdfPCell(new Paragraph("Task Rate", tableHeaderFont));
+                        PdfPCell c7 = new PdfPCell(new Paragraph("Task Comm. Amt.", tableHeaderFont));
+                        PdfPCell c8 = new PdfPCell(new Paragraph("Sales Assigned Rate", tableHeaderFont));
+                        PdfPCell c9 = new PdfPCell(new Paragraph("Sales Comm. Amt.", tableHeaderFont));
+
+
+
+                        c1.setHorizontalAlignment(Element.ALIGN_CENTER);
+                        c1.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                        c2.setHorizontalAlignment(Element.ALIGN_CENTER);
+                        c2.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                        c3.setHorizontalAlignment(Element.ALIGN_CENTER);
+                        c3.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                        c4.setHorizontalAlignment(Element.ALIGN_CENTER);
+                        c4.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                        c5.setHorizontalAlignment(Element.ALIGN_CENTER);
+                        c5.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                        c6.setHorizontalAlignment(Element.ALIGN_CENTER);
+                        c6.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                        c7.setHorizontalAlignment(Element.ALIGN_CENTER);
+                        c7.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                        c8.setHorizontalAlignment(Element.ALIGN_CENTER);
+                        c8.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                        c9.setHorizontalAlignment(Element.ALIGN_CENTER);
+                        c9.setVerticalAlignment(Element.ALIGN_MIDDLE);
+
+
+                        table.addCell(c1);
+                        table.addCell(c2);
+                        table.addCell(c3);
+                        table.addCell(c4);
+                        table.addCell(c5);
+                        table.addCell(c6);
+                        table.addCell(c7);
+                        table.addCell(c8);
+                        table.addCell(c9);
+                    }
+
+                    String configLevel = "";
+                    if(calculatedCommissionInfo != null && calculatedCommissionInfo.configLevel().equals("SUBCONTRACT LEVEL")){
+                        configLevel = " (SC)";
+                    }else if(calculatedCommissionInfo != null && calculatedCommissionInfo.configLevel().equals("INVOICE LEVEL")){
+                        configLevel = " (INV)";
+                    }else if(calculatedCommissionInfo != null && calculatedCommissionInfo.configLevel().equals("CUSTOMER LEVEL")){
+                        configLevel = " (CST)";
+                    }
+
+                    Font tableFont = FontFactory.getFont(FontFactory.HELVETICA, 7, BaseColor.BLACK);
+                    PdfPCell cell1 = new PdfPCell(new Paragraph(item.taskName() + configLevel, tableFont));
+                    PdfPCell cell2 = new PdfPCell(new Paragraph(item.deptName(), tableFont));
+                    PdfPCell cell3 = new PdfPCell(new Paragraph(new DecimalFormat("0.#").format(item.qty()), tableFont));
+                    PdfPCell cell4 = new PdfPCell(new Paragraph("$" + String.valueOf(item.cost()), tableFont));
+                    PdfPCell cell5 = new PdfPCell(new Paragraph("$" + String.valueOf(item.amount()), tableFont));
+                    PdfPCell cell6 = new PdfPCell(new Paragraph("n/a", FontFactory.getFont(FontFactory.HELVETICA, 8, BaseColor.BLACK)));
+                    PdfPCell cell7 = new PdfPCell(new Paragraph("n/a", FontFactory.getFont(FontFactory.HELVETICA, 8, BaseColor.BLACK)));
+                    PdfPCell cell8 = new PdfPCell(new Paragraph("n/a", FontFactory.getFont(FontFactory.HELVETICA, 8, BaseColor.BLACK)));
+                    PdfPCell cell9 = new PdfPCell(new Paragraph("n/a", FontFactory.getFont(FontFactory.HELVETICA, 8, BaseColor.BLACK)));
+
+                    cell3.setHorizontalAlignment(Element.ALIGN_CENTER);
+                    cell3.setVerticalAlignment(Element.ALIGN_MIDDLE);
+
+                    cell4.setHorizontalAlignment(Element.ALIGN_RIGHT);
+                    cell4.setVerticalAlignment(Element.ALIGN_MIDDLE);
+
+                    cell5.setHorizontalAlignment(Element.ALIGN_RIGHT);
+                    cell5.setVerticalAlignment(Element.ALIGN_MIDDLE);
+
+                    cell6.setHorizontalAlignment(Element.ALIGN_CENTER);
+                    cell6.setVerticalAlignment(Element.ALIGN_MIDDLE);
+
+                    cell7.setHorizontalAlignment(Element.ALIGN_CENTER);
+                    cell7.setVerticalAlignment(Element.ALIGN_MIDDLE);
+
+                    cell8.setHorizontalAlignment(Element.ALIGN_CENTER);
+                    cell8.setVerticalAlignment(Element.ALIGN_MIDDLE);
+
+                    cell9.setHorizontalAlignment(Element.ALIGN_CENTER);
+                    cell9.setVerticalAlignment(Element.ALIGN_MIDDLE);
+
+                    BaseColor LightGray = new BaseColor(215, 215, 215);
+                    if(count%2 == 0){
+                        cell1.setBackgroundColor(LightGray);
+                        cell2.setBackgroundColor(LightGray);
+                        cell3.setBackgroundColor(LightGray);
+                        cell4.setBackgroundColor(LightGray);
+                        cell5.setBackgroundColor(LightGray);
+                        cell6.setBackgroundColor(LightGray);
+                        cell7.setBackgroundColor(LightGray);
+                        cell8.setBackgroundColor(LightGray);
+                        cell9.setBackgroundColor(LightGray);
+                    }
+
+
+                    if(calculatedCommissionInfo != null){
+                        cell6 = new PdfPCell(new Paragraph(String.valueOf(calculatedCommissionInfo.taskRate()) + "%", tableFont));
+                        cell7 = new PdfPCell(new Paragraph("$" + String.valueOf(calculatedCommissionInfo.taskCommissionDollarValue()), tableFont));
+                        cell8 = new PdfPCell(new Paragraph(String.valueOf(calculatedCommissionInfo.salesPersonAssignedRate()) + "%", tableFont));
+                        cell9 = new PdfPCell(new Paragraph("$" + String.valueOf(calculatedCommissionInfo.salesDollarValue()), tableFont));
+
+                        cell6.setHorizontalAlignment(Element.ALIGN_RIGHT);
+                        cell6.setVerticalAlignment(Element.ALIGN_MIDDLE);
+
+                        cell7.setHorizontalAlignment(Element.ALIGN_RIGHT);
+                        cell7.setVerticalAlignment(Element.ALIGN_MIDDLE);
+
+                        cell8.setHorizontalAlignment(Element.ALIGN_RIGHT);
+                        cell8.setVerticalAlignment(Element.ALIGN_MIDDLE);
+
+                        cell9.setHorizontalAlignment(Element.ALIGN_RIGHT);
+                        cell9.setVerticalAlignment(Element.ALIGN_MIDDLE);
+
+                        cell6.setPaddingRight(3f);
+                        cell7.setPaddingRight(3f);
+                        cell8.setPaddingRight(3f);
+                        cell9.setPaddingRight(3f);
+
+                        if(count%2 == 0){
+                            cell6.setBackgroundColor(LightGray);
+                            cell7.setBackgroundColor(LightGray);
+                            cell8.setBackgroundColor(LightGray);
+                            cell9.setBackgroundColor(LightGray);
+                        }
+                    }
+
+                    table.addCell(cell1);
+                    table.addCell(cell2);
+                    table.addCell(cell3);
+                    table.addCell(cell4);
+                    table.addCell(cell5);
+                    table.addCell(cell6);
+                    table.addCell(cell7);
+                    table.addCell(cell8);
+                    table.addCell(cell9);
+
+
+                    // Display total at the last row, final column
+                    if(count == chargedTaskItems.size()-1){
+                        table.addCell(new PdfPCell(new Paragraph("")));
+                        table.addCell(new PdfPCell(new Paragraph("")));
+                        table.addCell(new PdfPCell(new Paragraph("")));
+                        table.addCell(new PdfPCell(new Paragraph("")));
+                        table.addCell(new PdfPCell(new Paragraph("")));
+                        table.addCell(new PdfPCell(new Paragraph("")));
+                        table.addCell(new PdfPCell(new Paragraph("")));
+                        table.addCell(new PdfPCell(new Paragraph("")));
+
+                        Font salesCommissionTotalFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 8, new BaseColor(11, 84, 30));
+                        PdfPCell salesTotalCommission = new PdfPCell(new Paragraph("$"+ String.valueOf(salesCommissionTotal), salesCommissionTotalFont));
+                        salesTotalCommission.setBackgroundColor(new BaseColor(193, 247, 207));
+                        salesTotalCommission.setHorizontalAlignment(Element.ALIGN_CENTER);
+                        salesTotalCommission.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                        table.addCell(salesTotalCommission);
+                    }
+
+                    document.add(table);
+                    ++count;
+                }
+
+
+            }
+
+
+
+
+            document.close();
+            inputStream = new ByteArrayInputStream(outputStream.toByteArray());
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return inputStream;
+    }
 
     public InputStream getSalespersonCommissionReport(int empID, LocalDate d1, LocalDate d2){
 

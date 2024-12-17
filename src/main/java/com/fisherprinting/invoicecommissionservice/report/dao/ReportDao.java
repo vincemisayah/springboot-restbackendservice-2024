@@ -205,4 +205,22 @@ public class ReportDao {
         }
         return list;
     }
+
+    public String getEmployeeNameByID(int empID) throws DataAccessException {
+        List<DataTransferObjectsContainer.InvoiceInfo> list = new ArrayList<>();
+        String sql = """
+                    SELECT firstName + ' ' + lastName
+                    FROM [intrafisher].[dbo].[employees]
+                    WHERE [employees].[id] = :empID
+                    """;
+
+        MapSqlParameterSource parameters = new MapSqlParameterSource();
+        parameters.addValue("empID", empID);
+
+        try{
+            return template.queryForObject(sql, parameters, String.class);
+        }catch(DataAccessException e){
+            throw e;
+        }
+    }
 }
