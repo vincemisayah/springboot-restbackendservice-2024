@@ -8,6 +8,8 @@ import com.fisherprinting.invoicecommissionservice.invoiceLevel.service.InvoiceL
 import com.fisherprinting.invoicecommissionservice.report.dao.ReportDao;
 import com.fisherprinting.invoicecommissionservice.report.dtos.DataTransferObjectsContainer;
 import com.fisherprinting.invoicecommissionservice.report.service.ReportService;
+import com.itextpdf.text.Document;
+import com.itextpdf.text.DocumentException;
 import lombok.AllArgsConstructor;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
@@ -19,6 +21,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.time.LocalDate;
@@ -71,62 +75,6 @@ public class ReportController {
                 .body(resource);
     }
 
-    // localhost:1118/invoiceCommissionService/report/v1/pdfDownload/salespersonCommReport/291?d1=2024-01-05&d2=2024-12-05
-    @GetMapping("/pdfDownload/salespersonCommReport/{empID}")
-    public ResponseEntity<Resource> downloadSalespersonCommissionReport(
-            @PathVariable("empID") Integer empID,
-            @RequestParam("d1")  @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate d1,
-            @RequestParam("d2")  @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate d2)
-    {
-        // Test Parameters
-        int employeeId = empID;
-        List<Integer> invoiceIds = new ArrayList<>();
-        invoiceIds.add(2008072);
-
-        InputStreamResource resource = new InputStreamResource(reportService.getSalespersonCommissionReport(employeeId, d1, d2));
-        String fileName = "testFileName.pdf";
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=" + fileName)
-                .contentType(MediaType.APPLICATION_PDF)
-                .body(resource);
-    }
-
-    // localhost:1118/invoiceCommissionService/report/v1/viewpdf/salespersonCommReport/291?d1=2024-01-05&d2=2024-12-05
-    @GetMapping("/viewpdf/salespersonCommReport/{empID}")
-    public ResponseEntity<Resource> viewSalespersonCommissionReport(
-            @PathVariable("empID") Integer empID,
-            @RequestParam("d1")  @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate d1,
-            @RequestParam("d2")  @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate d2)
-    {
-        // Test Parameters
-        int employeeId = empID;
-        List<Integer> invoiceIds = new ArrayList<>();
-        invoiceIds.add(2008072);
-
-        InputStreamResource resource = new InputStreamResource(reportService.getSalespersonCommissionReport(employeeId, d1, d2));
-        String fileName = "testFileName.pdf";
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "inline; filename=" + fileName)
-                .contentType(MediaType.APPLICATION_PDF)
-                .body(resource);
-    }
-
-//    @PostMapping("/paidInvoices")
-//    public ResponseEntity<Resource> paidInvoices(@RequestParam("startDate") @DateTimeFormat(pattern = "M/d/yy") LocalDate startDate,
-//                                          @RequestParam("endDate") @DateTimeFormat(pattern = "M/d/yy") LocalDate endDate){
-////        return ResponseEntity.ok().body(Map.of("msg", "success"));
-//
-//        InputStreamResource resource = new InputStreamResource(reportService.getSalespersonCommissionReport(291, startDate, endDate));
-//        String fileName = "testFileName.pdf";
-//        return ResponseEntity.ok()
-//                .header(HttpHeaders.CONTENT_DISPOSITION,
-//                        "attachment; filename=" + fileName)
-//                .contentType(MediaType.APPLICATION_PDF)
-//                .body(resource);
-//    }
-
     @PostMapping("/paidInvoices")
     public ResponseEntity<?> paidInvoices(@RequestParam("startDate") @DateTimeFormat(pattern = "M/d/yy") LocalDate startDate,
                                           @RequestParam("endDate")   @DateTimeFormat(pattern = "M/d/yy") LocalDate endDate) throws ParseException {
@@ -158,5 +106,33 @@ public class ReportController {
                         "inline; filename=" + fileName)
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(resource);
+    }
+
+    @PostMapping("/saveToBatchReport")
+    public ResponseEntity<?> saveBatchReport(@RequestParam("startDate") @DateTimeFormat(pattern = "M/d/yy") LocalDate startDate,
+                                          @RequestParam("endDate")   @DateTimeFormat(pattern = "M/d/yy") LocalDate endDate) throws ParseException, DocumentException, IOException {
+        List<DTOs.PaidInvoiceInfo> paidInvoices = fileUploadService.removeDuplicates(reportDao.getPaidInvoicesFromRecords(startDate, endDate));
+        List<Integer> salesPersonEmpIDs = reportService.getSalespersonListFromInvoiceList(paidInvoices);
+        List<DTOs.SalespersonAssignedInvoices> salespersonAssignedInvoices = new ArrayList<>();
+
+        List<Integer> empIds = new ArrayList<>();
+        for(Integer empID : salesPersonEmpIDs){
+            empIds.add(empID);
+
+            String empName = reportDao.getEmployeeNameByID(empID);
+            DTOs.Salesperson salesperson = new DTOs.Salesperson(empID, empName);
+            List<DTOs.PaidInvoiceInfo> paidInvoicesAssignedToEmpId = reportDao.getPaidInvoicesFromRecordsByEmpID(empID, startDate, endDate);
+            salespersonAssignedInvoices.add(new DTOs.SalespersonAssignedInvoices(salesperson, fileUploadService.viewableFilteredInvoiceData(paidInvoicesAssignedToEmpId)));
+        }
+        List<DTOs.ViewableFilteredInvoiceData> viewablePaidInvoices = fileUploadService.viewableFilteredInvoiceData(paidInvoices);
+
+
+        InputStreamResource resource = new InputStreamResource(reportService.createBatchReportt(salespersonAssignedInvoices));
+
+        Document document = new Document();
+
+        return ResponseEntity.ok().body(Map.of(
+                "PaidInvoices", viewablePaidInvoices,
+                "SalespersonAssignedInvoices", salespersonAssignedInvoices));
     }
 }
