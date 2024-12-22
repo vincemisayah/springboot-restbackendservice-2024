@@ -30,4 +30,7 @@ public class DataTransferObjectsContainer {
             Date invoiceDate,
             Date paymentDueDate)
     { }
+
+    public record SavedBatchReport(String dateStr, String fileName)
+    { }
 }

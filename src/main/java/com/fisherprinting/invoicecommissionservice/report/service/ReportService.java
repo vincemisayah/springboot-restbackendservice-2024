@@ -16,19 +16,23 @@ import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
 import com.itextpdf.text.pdf.PdfPCell;
+
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.math.BigDecimal;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
@@ -56,6 +60,12 @@ public class ReportService {
     private final SubcontractDao subcontractDao;
     private final SubcontractService subcontractService;
     private final CustomerLevelDao customerLevelDao;
+
+    @Value("${app.records.path}")
+    private String basePath;
+
+    @Value("${app.records.defaultBatchReportFileName}")
+    private String fileName;
 
     public ReportService(ReportDao reportDao, InvoiceLevelDao invoiceLevelDao, CustomerLevelService customerLevelService, InvoiceLevelService invoiceLevelService, SubcontractDao subcontractDao, SubcontractService subcontractService, CustomerLevelDao customerLevelDao) {
         this.reportDao = reportDao;
@@ -316,27 +326,6 @@ public class ReportService {
         return inputStream;
     }
 
-    public InputStream test1(){
-        InputStream inputStream = null;
-        try{
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-
-            // Create Document and PdfWriter
-            Document document = new Document();
-            PdfWriter.getInstance(document, outputStream);
-
-            document.open();
-            Font font = FontFactory.getFont(FontFactory.HELVETICA, 16, BaseColor.BLACK);
-            Chunk chunk = new Chunk("Hello World", font);
-
-            document.add(chunk);
-            document.close();
-            inputStream = new ByteArrayInputStream(outputStream.toByteArray());
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-        return inputStream;
-    }
 
     public DataTransferObjectsContainer.FinalSalesCalculatedCommissionInfo
     calculateInvoiceTaskCommission(int customerID,
@@ -438,16 +427,9 @@ public class ReportService {
         return new ArrayList<>(salesPersonTreeSet);
     }
 
-    public InputStream createBatchReportt(List<DTOs.SalespersonAssignedInvoices> salespersonAssignedInvoices) throws DocumentException, FileNotFoundException {
-
-        String destination = "C:/Users/vince/OneDrive/Documents/commissionReport.pdf";
-        String basePath = "C:/Users/vince/Downloads/RecordsCommissionReports/";
-
-
+    public InputStream createAndSaveBatchReport(List<DTOs.SalespersonAssignedInvoices> salespersonAssignedInvoices) throws DocumentException, FileNotFoundException {
         SimpleDateFormat ft = new SimpleDateFormat("yyyy-MM-dd");
         String date = ft.format(new Date());
-
-        String fileName = "/commissionReport.pdf";
         String filePath = basePath + date;
         File file = new File(filePath);
         boolean dirCreated = file.mkdir();
@@ -462,7 +444,7 @@ public class ReportService {
         // Create Document and PdfWriter
         Document document = new Document();
 
-        PdfWriter.getInstance(document, new FileOutputStream(filePath + fileName));
+        PdfWriter.getInstance(document, new FileOutputStream(filePath +"/"+ fileName));
         document.open();
         for(DTOs.SalespersonAssignedInvoices salespersonAssignedInvoice : salespersonAssignedInvoices){
             int empID = salespersonAssignedInvoice.salesperson().empID();
@@ -478,10 +460,6 @@ public class ReportService {
             String empName = reportDao.getEmployeeName(empID);
 
             try{
-
-
-
-
                 Paragraph p = new Paragraph();
                 p.add("Salesperson: " + empName);
                 p.add("\n");
@@ -519,18 +497,22 @@ public class ReportService {
                     p.add(chunkInvoiceId);
 
                     Font fontTablElem = FontFactory.getFont(FontFactory.HELVETICA, 8, BaseColor.BLACK);
+//                    p.setTabSettings(new TabSettings(20f));
+//                    p.add(Chunk.TABBING);
+//                    p.add(new Chunk("\u2022  Customer AR#: " + invoiceInfo.customerAR( ) + "\n", fontTablElem));
                     p.setTabSettings(new TabSettings(20f));
                     p.add(Chunk.TABBING);
-                    p.add(new Chunk("\u2022  Customer AR#: " + invoiceInfo.customerAR( ) + "\n", fontTablElem));
+                    p.add(new Chunk("\u2022  Customer Name: " + invoiceInfo.customerName( ) + " (AR#" + invoiceInfo.customerAR( )  + ")\n", fontTablElem));
+
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy");
                     p.setTabSettings(new TabSettings(20f));
                     p.add(Chunk.TABBING);
-                    p.add(new Chunk("\u2022  Customer Name: " + invoiceInfo.customerName( ) + "\n", fontTablElem));
-                    p.setTabSettings(new TabSettings(20f));
-                    p.add(Chunk.TABBING);
-                    p.add(new Chunk("\u2022  Inv. Date: " + invoiceInfo.invoiceDate( ) + "\n", fontTablElem));
-                    p.setTabSettings(new TabSettings(20f));
-                    p.add(Chunk.TABBING);
-                    p.add(new Chunk("\u2022  Inv. Payment Due Date: " + invoiceInfo.paymentDueDate( ) + "\n\n", fontTablElem));
+                    p.add(new Chunk("\u2022  Inv. Date: " + dateFormat.format(invoiceInfo.invoiceDate( ))
+                            + " | Payment Due Date: " +  dateFormat.format(invoiceInfo.paymentDueDate( )) + "\n\n", fontTablElem));
+
+//                    p.setTabSettings(new TabSettings(20f));
+//                    p.add(Chunk.TABBING);
+//                    p.add(new Chunk("\u2022  Inv. Payment Due Date: " + invoiceInfo.paymentDueDate( ) + "\n\n", fontTablElem));
                     document.add(p);
 
                     List<InvoiceLevelDao.InvoiceChargedTaskItem> chargedTaskItems = invoiceLevelDao.getInvoiceChargedItems(invoiceId);
@@ -696,7 +678,9 @@ public class ReportService {
                             table.addCell(new PdfPCell(new Paragraph("")));
                             table.addCell(new PdfPCell(new Paragraph("")));
                             table.addCell(new PdfPCell(new Paragraph("")));
-                            table.addCell(new PdfPCell(new Paragraph("")));
+
+                            Font salesNameFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 8, new BaseColor(0, 0, 0));
+                            table.addCell(new PdfPCell(new Paragraph(empName, salesNameFont)));
 
                             Font salesCommissionTotalFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 8, new BaseColor(11, 84, 30));
                             PdfPCell salesTotalCommission = new PdfPCell(new Paragraph("$"+ String.valueOf(salesCommissionTotal), salesCommissionTotalFont));
@@ -722,7 +706,55 @@ public class ReportService {
         document.close();
         inputStream = new ByteArrayInputStream(outputStream.toByteArray());
         return inputStream;
+    }
 
+    public List<String> allDatesOfTheYear(int year){// Replace with the desired year
+        List<String> datesOfTheYear = new ArrayList<>();
+        LocalDate startDate = LocalDate.of(year, 1, 1);
+        LocalDate endDate = LocalDate.of(year, 12, 31);
 
+        LocalDate currentDate = startDate;
+        while (!currentDate.isAfter(endDate)) {
+//            SimpleDateFormat ft = new SimpleDateFormat("yyyy-MM-dd");
+//            String date = ft.format(currentDate);
+            System.out.println(currentDate);
+            datesOfTheYear.add(currentDate.toString());
+            currentDate = currentDate.plusDays(1);
+        }
+        return datesOfTheYear;
+    }
+
+    public List<DataTransferObjectsContainer.SavedBatchReport> fileNames(int year){
+        List<DataTransferObjectsContainer.SavedBatchReport> fileNames = new ArrayList<>();
+        this.allDatesOfTheYear(year).forEach(date ->{
+            String filePath = basePath + date;
+            Path directoryPath = Paths.get(filePath);
+            try (DirectoryStream<Path> stream = Files.newDirectoryStream(directoryPath)) {
+                for (Path entry : stream) {
+                    DataTransferObjectsContainer.SavedBatchReport sbr =
+                            new DataTransferObjectsContainer.SavedBatchReport(date, entry.getFileName().toString());
+                    fileNames.add(sbr);
+                    System.out.println(entry.getFileName());
+                }
+            } catch (IOException e) {
+                DataTransferObjectsContainer.SavedBatchReport sbr =
+                        new DataTransferObjectsContainer.SavedBatchReport(date, "");
+                fileNames.add(sbr);
+            }
+        });
+        return fileNames;
+    }
+
+    public List<DataTransferObjectsContainer.SavedBatchReport> fileNamesByMonth(int year, int month){
+        List<DataTransferObjectsContainer.SavedBatchReport> fileNames = fileNames(year);
+
+        List<DataTransferObjectsContainer.SavedBatchReport> fileNamesByMonth = new ArrayList<>();
+        fileNames.forEach(date->{
+            String MM = date.dateStr().split("-")[1];
+            if(Integer.valueOf(MM) == month){
+                fileNamesByMonth.add(date);
+            }
+        });
+        return fileNamesByMonth;
     }
 }

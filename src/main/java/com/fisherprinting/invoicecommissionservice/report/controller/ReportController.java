@@ -10,7 +10,10 @@ import com.fisherprinting.invoicecommissionservice.report.dtos.DataTransferObjec
 import com.fisherprinting.invoicecommissionservice.report.service.ReportService;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -21,15 +24,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
+import java.nio.file.*;
+import java.io.*;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -41,6 +46,12 @@ public class ReportController {
     private final ReportService reportService;
     private final FileUploadService fileUploadService;
     private final ReportDao reportDao;
+
+    @Value("${app.records.path}")
+    private String basePath;
+
+    @Value("${app.records.defaultBatchReportFileName}")
+    private String fileName;
 
     public ReportController(CustomerLevelService customerLevelService, InvoiceLevelService invoiceLevelService, ReportService reportService, FileUploadService fileUploadService, ReportDao reportDao) {
         this.customerLevelService = customerLevelService;
@@ -59,20 +70,6 @@ public class ReportController {
                                    @RequestParam("orderNumber")int orderNumber,
                                    @RequestParam("employeeID")int employeeID) {
         return reportService.calculateInvoiceTaskCommission(customerID, invoiceID, taskID, orderNumber, employeeID);
-    }
-
-
-    // localhost:1118/invoiceCommissionService/report/v1/pdfdownload/123
-    @GetMapping("/pdfdownload/{invoiceID}")
-    public ResponseEntity<Resource> downloadContractPDF(@PathVariable("invoiceID") Integer invoiceID){
-//        InputStreamResource resource = new InputStreamResource(reportService.generateInvoiceCommissionReport());
-        InputStreamResource resource = new InputStreamResource(reportService.test1());
-        String fileName = "testFileName.pdf";
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=" + fileName)
-                .contentType(MediaType.APPLICATION_PDF)
-                .body(resource);
     }
 
     @PostMapping("/paidInvoices")
@@ -127,12 +124,63 @@ public class ReportController {
         List<DTOs.ViewableFilteredInvoiceData> viewablePaidInvoices = fileUploadService.viewableFilteredInvoiceData(paidInvoices);
 
 
-        InputStreamResource resource = new InputStreamResource(reportService.createBatchReportt(salespersonAssignedInvoices));
+        InputStreamResource resource = new InputStreamResource(reportService.createAndSaveBatchReport(salespersonAssignedInvoices));
+        SimpleDateFormat ft = new SimpleDateFormat("yyyy-MM-dd");
+        String dateStr = ft.format(new Date());
+        String filePath = basePath + dateStr + "/" + fileName;
+        File file = new File(filePath);
 
-        Document document = new Document();
+        if (file.exists()) {
+            return ResponseEntity.ok().body(Map.of("Message", "Success"));
+        } else {
+            return ResponseEntity.internalServerError().body(Map.of("Message", "Failed"));
+        }
+    }
 
-        return ResponseEntity.ok().body(Map.of(
-                "PaidInvoices", viewablePaidInvoices,
-                "SalespersonAssignedInvoices", salespersonAssignedInvoices));
+    @GetMapping("/savedBatchReports/{year}")
+    public ResponseEntity<?> getSavedBatchReports(@PathVariable("year") int year) {
+        Map<String, List<DataTransferObjectsContainer.SavedBatchReport>> filesByMonth = Map.ofEntries(
+                Map.entry("January", reportService.fileNamesByMonth(year, 1)),
+                Map.entry("February", reportService.fileNamesByMonth(year, 2)),
+                Map.entry("March", reportService.fileNamesByMonth(year, 3)),
+                Map.entry("April", reportService.fileNamesByMonth(year, 4)),
+                Map.entry("May", reportService.fileNamesByMonth(year, 5)),
+                Map.entry("June", reportService.fileNamesByMonth(year, 6)),
+                Map.entry("July", reportService.fileNamesByMonth(year, 7)),
+                Map.entry("August", reportService.fileNamesByMonth(year, 8)),
+                Map.entry("September", reportService.fileNamesByMonth(year, 9)),
+                Map.entry("October", reportService.fileNamesByMonth(year, 10)),
+                Map.entry("November", reportService.fileNamesByMonth(year, 11)),
+                Map.entry("December", reportService.fileNamesByMonth(year, 12))
+        );
+
+        return ResponseEntity.ok().body(filesByMonth);
+    }
+
+    public static InputStreamResource convertFileToInputStreamResource(File file) throws FileNotFoundException {
+        FileInputStream inputStream = new FileInputStream(file);
+        return new InputStreamResource(inputStream);
+    }
+
+    @PostMapping("/download/batchReport/{dateStr}")
+    public ResponseEntity<?> viewSalespersonPdfReport(@PathVariable("dateStr") String dateStr){
+        String filePath = basePath + dateStr + "/" + fileName;
+        File file = new File(filePath);
+
+        if (file.exists()) {
+            try {
+                InputStreamResource resource = convertFileToInputStreamResource(file);
+                return ResponseEntity.ok()
+                        .header(HttpHeaders.CONTENT_DISPOSITION,
+                                "inline; filename=" + fileName)
+                        .contentType(MediaType.APPLICATION_PDF)
+                        .body(resource);
+            } catch (FileNotFoundException e) {
+                System.out.println("File not found: " + e.getMessage());
+            }
+        } else {
+            // Handle error if file not found
+        }
+        return ResponseEntity.internalServerError().body(Map.of("message", "File not found"));
     }
 }
