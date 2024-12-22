@@ -11,21 +11,12 @@ import com.fisherprinting.invoicecommissionservice.report.dao.ReportDao;
 import com.fisherprinting.invoicecommissionservice.report.dtos.DataTransferObjectsContainer;
 import com.fisherprinting.invoicecommissionservice.subcontract.dao.SubcontractDao;
 import com.fisherprinting.invoicecommissionservice.subcontract.service.SubcontractService;
-import com.itextpdf.kernel.colors.ColorConstants;
 import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
 import com.itextpdf.text.pdf.PdfPCell;
 
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.PDPageContentStream;
-import org.apache.pdfbox.pdmodel.font.PDFont;
-import org.apache.pdfbox.pdmodel.font.PDType1Font;
-import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
@@ -39,14 +30,6 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.List;
-
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.PDPageContentStream;
-import org.apache.pdfbox.pdmodel.font.PDFont;
-import org.apache.pdfbox.pdmodel.font.PDType1Font;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.server.ResponseStatusException;
 
 import static com.itextpdf.kernel.pdf.PdfName.Border;
 
@@ -497,9 +480,6 @@ public class ReportService {
                     p.add(chunkInvoiceId);
 
                     Font fontTablElem = FontFactory.getFont(FontFactory.HELVETICA, 8, BaseColor.BLACK);
-//                    p.setTabSettings(new TabSettings(20f));
-//                    p.add(Chunk.TABBING);
-//                    p.add(new Chunk("\u2022  Customer AR#: " + invoiceInfo.customerAR( ) + "\n", fontTablElem));
                     p.setTabSettings(new TabSettings(20f));
                     p.add(Chunk.TABBING);
                     p.add(new Chunk("\u2022  Customer Name: " + invoiceInfo.customerName( ) + " (AR#" + invoiceInfo.customerAR( )  + ")\n", fontTablElem));
@@ -509,10 +489,6 @@ public class ReportService {
                     p.add(Chunk.TABBING);
                     p.add(new Chunk("\u2022  Inv. Date: " + dateFormat.format(invoiceInfo.invoiceDate( ))
                             + " | Payment Due Date: " +  dateFormat.format(invoiceInfo.paymentDueDate( )) + "\n\n", fontTablElem));
-
-//                    p.setTabSettings(new TabSettings(20f));
-//                    p.add(Chunk.TABBING);
-//                    p.add(new Chunk("\u2022  Inv. Payment Due Date: " + invoiceInfo.paymentDueDate( ) + "\n\n", fontTablElem));
                     document.add(p);
 
                     List<InvoiceLevelDao.InvoiceChargedTaskItem> chargedTaskItems = invoiceLevelDao.getInvoiceChargedItems(invoiceId);
@@ -700,7 +676,6 @@ public class ReportService {
             }catch (Exception e){
                 e.printStackTrace();
             }
-            //---------------------------------------------------------------------------------------------
         }
 
         document.close();
@@ -715,9 +690,6 @@ public class ReportService {
 
         LocalDate currentDate = startDate;
         while (!currentDate.isAfter(endDate)) {
-//            SimpleDateFormat ft = new SimpleDateFormat("yyyy-MM-dd");
-//            String date = ft.format(currentDate);
-            System.out.println(currentDate);
             datesOfTheYear.add(currentDate.toString());
             currentDate = currentDate.plusDays(1);
         }
@@ -734,7 +706,6 @@ public class ReportService {
                     DataTransferObjectsContainer.SavedBatchReport sbr =
                             new DataTransferObjectsContainer.SavedBatchReport(date, entry.getFileName().toString());
                     fileNames.add(sbr);
-                    System.out.println(entry.getFileName());
                 }
             } catch (IOException e) {
                 DataTransferObjectsContainer.SavedBatchReport sbr =

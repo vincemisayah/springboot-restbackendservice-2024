@@ -1,6 +1,5 @@
 package com.fisherprinting.invoicecommissionservice.report.controller;
 
-import com.fisherprinting.invoicecommissionservice.customerLevel.model.SalesPerson;
 import com.fisherprinting.invoicecommissionservice.customerLevel.service.CustomerLevelService;
 import com.fisherprinting.invoicecommissionservice.fileUpload.DTOs.DTOs;
 import com.fisherprinting.invoicecommissionservice.fileUpload.service.FileUploadService;
@@ -8,32 +7,23 @@ import com.fisherprinting.invoicecommissionservice.invoiceLevel.service.InvoiceL
 import com.fisherprinting.invoicecommissionservice.report.dao.ReportDao;
 import com.fisherprinting.invoicecommissionservice.report.dtos.DataTransferObjectsContainer;
 import com.fisherprinting.invoicecommissionservice.report.service.ReportService;
-import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletResponse;
-import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamResource;
-import org.springframework.core.io.Resource;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.*;
 
-import java.nio.file.*;
 import java.io.*;
 
 @CrossOrigin(origins = "*")
