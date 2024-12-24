@@ -1,5 +1,6 @@
 package com.fisherprinting.invoicecommissionservice.report.controller;
 
+import com.fasterxml.jackson.databind.util.JSONPObject;
 import com.fisherprinting.invoicecommissionservice.customerLevel.service.CustomerLevelService;
 import com.fisherprinting.invoicecommissionservice.fileUpload.DTOs.DTOs;
 import com.fisherprinting.invoicecommissionservice.fileUpload.service.FileUploadService;
@@ -8,6 +9,7 @@ import com.fisherprinting.invoicecommissionservice.report.dao.ReportDao;
 import com.fisherprinting.invoicecommissionservice.report.dtos.DataTransferObjectsContainer;
 import com.fisherprinting.invoicecommissionservice.report.service.ReportService;
 import com.itextpdf.text.DocumentException;
+import netscape.javascript.JSObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -152,9 +154,9 @@ public class ReportController {
         return new InputStreamResource(inputStream);
     }
 
-    @PostMapping("/download/batchReport/{dateStr}")
-    public ResponseEntity<?> viewSalespersonPdfReport(@PathVariable("dateStr") String dateStr){
-        String filePath = basePath + dateStr + "/" + fileName;
+    @PostMapping("/download/batchReport")
+    public ResponseEntity<?> viewSalespersonPdfReport(@RequestParam("passedDate") String passedDate){
+        String filePath = basePath + passedDate + "/" + fileName;
         File file = new File(filePath);
 
         if (file.exists()) {

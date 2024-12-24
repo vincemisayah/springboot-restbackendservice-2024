@@ -36,33 +36,63 @@ public class FileUploadController {
 //    }
 
     //localhost:1118/invoiceCommissionService/fileUpload/v1/excelFile/filterPaidInvoicesb
+//    @PostMapping("/excelFile/filterPaidInvoices")
+//    public ResponseEntity<?> filterPaidInvoicesFromFile(@RequestParam("empIDStr") String empIDStr, @RequestParam("file") MultipartFile file) throws ParseException {
+//        int empID = Integer.parseInt(empIDStr);
+//        if(fileUploadService.processPaidInvoiceExcelFile(empID, file)){
+//            List<DTOs.PaidInvoiceInfo> shortPaid = fileUploadService.removeDuplicates(fileUploadDao.getShortPaidInvoicesListFromBuffer(empID));
+//            List<DTOs.PaidInvoiceInfo> fullyPaid = fileUploadService.removeDuplicates(fileUploadDao.getFullyPaidInvoicesListFromBuffer(empID));
+//            List<DTOs.PaidInvoiceInfo> overPaid = fileUploadService.removeDuplicates(fileUploadDao.getOverPaidInvoicesListFromBuffer(empID));
+//
+//            List<DTOs.ViewableFilteredInvoiceData> viewableFullyPaidInvoices = fileUploadService.viewableFilteredInvoiceData(fullyPaid);
+//            List<DTOs.ViewableFilteredInvoiceData> viewableOverPaidInvoices = fileUploadService.viewableFilteredInvoiceData(overPaid);
+//            List<DTOs.ViewableFilteredInvoiceData> viewableShortPaidInvoices = fileUploadService.viewableFilteredInvoiceData(shortPaid);
+//
+//            List<DTOs.InvoiceDup> invoiceDups = fileUploadDao.invoiceDupListFromBuffer(empID);
+//
+//            fileUploadDao.deletePaidInvoiceDataFromBuffer(empID);
+//
+//            return ResponseEntity.ok().body(Map.of(
+//                    "ViewableFullyPaidInvoices", viewableFullyPaidInvoices,
+//                    "ViewableOverPaidInvoices", viewableOverPaidInvoices,
+//                    "ViewableShortPaidInvoices", viewableShortPaidInvoices,
+//                    "ShortPaidInvoices", shortPaid,
+//                    "FullyPaidInvoices", fullyPaid,
+//                    "OverPaidInvoices", overPaid,
+//                    "InvoiceDupsFound", invoiceDups
+//            ));
+//        }
+//        return ResponseEntity.internalServerError().body(Map.of("Message", "Upload attempt failed."));
+//    }
+
     @PostMapping("/excelFile/filterPaidInvoices")
-    public ResponseEntity<?> filterPaidInvoicesFromFile(@RequestParam("empIDStr") String empIDStr, @RequestParam("file") MultipartFile file) throws ParseException {
-        int empID = Integer.parseInt(empIDStr);
-        if(fileUploadService.processPaidInvoiceExcelFile(empID, file)){
-            List<DTOs.PaidInvoiceInfo> shortPaid = fileUploadService.removeDuplicates(fileUploadDao.getShortPaidInvoicesListFromBuffer(empID));
-            List<DTOs.PaidInvoiceInfo> fullyPaid = fileUploadService.removeDuplicates(fileUploadDao.getFullyPaidInvoicesListFromBuffer(empID));
-            List<DTOs.PaidInvoiceInfo> overPaid = fileUploadService.removeDuplicates(fileUploadDao.getOverPaidInvoicesListFromBuffer(empID));
-
-            List<DTOs.ViewableFilteredInvoiceData> viewableFullyPaidInvoices = fileUploadService.viewableFilteredInvoiceData(fullyPaid);
-            List<DTOs.ViewableFilteredInvoiceData> viewableOverPaidInvoices = fileUploadService.viewableFilteredInvoiceData(overPaid);
-            List<DTOs.ViewableFilteredInvoiceData> viewableShortPaidInvoices = fileUploadService.viewableFilteredInvoiceData(shortPaid);
-
-            List<DTOs.InvoiceDup> invoiceDups = fileUploadDao.invoiceDupListFromBuffer(empID);
-
-            fileUploadDao.deletePaidInvoiceDataFromBuffer(empID);
-
-            return ResponseEntity.ok().body(Map.of(
-                    "ViewableFullyPaidInvoices", viewableFullyPaidInvoices,
-                    "ViewableOverPaidInvoices", viewableOverPaidInvoices,
-                    "ViewableShortPaidInvoices", viewableShortPaidInvoices,
-                    "ShortPaidInvoices", shortPaid,
-                    "FullyPaidInvoices", fullyPaid,
-                    "OverPaidInvoices", overPaid,
-                    "InvoiceDupsFound", invoiceDups
-            ));
-        }
-        return ResponseEntity.internalServerError().body(Map.of("Message", "Upload attempt failed."));
+    public ResponseEntity<?> filterPaidInvoicesFromFile(@RequestParam("name") String name) throws ParseException {
+        return null;
+//        int empID = Integer.parseInt("3667");
+//        if(fileUploadService.processPaidInvoiceExcelFile(empID, file)){
+//            List<DTOs.PaidInvoiceInfo> shortPaid = fileUploadService.removeDuplicates(fileUploadDao.getShortPaidInvoicesListFromBuffer(empID));
+//            List<DTOs.PaidInvoiceInfo> fullyPaid = fileUploadService.removeDuplicates(fileUploadDao.getFullyPaidInvoicesListFromBuffer(empID));
+//            List<DTOs.PaidInvoiceInfo> overPaid = fileUploadService.removeDuplicates(fileUploadDao.getOverPaidInvoicesListFromBuffer(empID));
+//
+//            List<DTOs.ViewableFilteredInvoiceData> viewableFullyPaidInvoices = fileUploadService.viewableFilteredInvoiceData(fullyPaid);
+//            List<DTOs.ViewableFilteredInvoiceData> viewableOverPaidInvoices = fileUploadService.viewableFilteredInvoiceData(overPaid);
+//            List<DTOs.ViewableFilteredInvoiceData> viewableShortPaidInvoices = fileUploadService.viewableFilteredInvoiceData(shortPaid);
+//
+//            List<DTOs.InvoiceDup> invoiceDups = fileUploadDao.invoiceDupListFromBuffer(empID);
+//
+//            fileUploadDao.deletePaidInvoiceDataFromBuffer(empID);
+//
+//            return ResponseEntity.ok().body(Map.of(
+//                    "ViewableFullyPaidInvoices", viewableFullyPaidInvoices,
+//                    "ViewableOverPaidInvoices", viewableOverPaidInvoices,
+//                    "ViewableShortPaidInvoices", viewableShortPaidInvoices,
+//                    "ShortPaidInvoices", shortPaid,
+//                    "FullyPaidInvoices", fullyPaid,
+//                    "OverPaidInvoices", overPaid,
+//                    "InvoiceDupsFound", invoiceDups
+//            ));
+//        }
+//        return ResponseEntity.internalServerError().body(Map.of("Message", "Upload attempt failed."));
     }
 
     @PostMapping("/excelFile/saveInvoiceData")
