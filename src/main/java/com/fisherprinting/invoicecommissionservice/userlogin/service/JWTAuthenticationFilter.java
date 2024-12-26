@@ -30,6 +30,13 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
     {
         final String authorizationHeader = request.getHeader("authorization");
 
+        if(authorizationHeader != null) {
+            System.out.println("TOKEN FOUND!");
+            System.out.println(authorizationHeader);
+        }else{
+            System.out.println("TOKEN NOT FOUND!");
+        }
+
         // Check if the Authorization key is available and if the authorization starts
         // with the string, 'Bearer'
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {

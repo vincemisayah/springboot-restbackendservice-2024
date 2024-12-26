@@ -27,4 +27,11 @@ public class DTOs {
     public record InvoiceDup(int invoiceID, int count){ }
     public record Salesperson(int empID, String firstLastName){ }
     public record SalespersonAssignedInvoices(Salesperson salesperson, List<DTOs.ViewableFilteredInvoiceData> assignedInvoices){ }
+
+    public record InvoiceRowData(
+            String invoiceID,
+            String invoiceDate,
+            String datePaid,
+            String total,
+            String amountPaid){}
 }

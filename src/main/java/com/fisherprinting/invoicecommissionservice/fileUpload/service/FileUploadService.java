@@ -103,6 +103,38 @@ public class FileUploadService {
         return Integer.parseInt(invoiceID);
     }
 
+    public boolean insertToBeFilteredPaidInvoiceData(int uploadedBy, List<DTOs.InvoiceRowData> invoiceRowData){
+        boolean insertSuccess = true;
+
+        Integer invoiceID = null;
+        Date invoiceDate = null;
+        Date datePaid = null;
+        BigDecimal invoiceTotal = null;
+        BigDecimal amountPaid = null;
+
+        for(DTOs.InvoiceRowData rowData : invoiceRowData) {
+            invoiceID = (parseInvoiceId(rowData.invoiceID()) != null)? parseInvoiceId(rowData.invoiceID()): null;
+            if(invoiceID == null)
+                continue;
+
+            invoiceDate = Date.valueOf(rowData.invoiceDate());
+            datePaid =  Date.valueOf(rowData.datePaid());
+            invoiceTotal = new BigDecimal(rowData.total());
+            amountPaid = new BigDecimal(rowData.amountPaid());
+
+
+            DTOs.PaidInvoiceInfo paidInvoiceInfo = new DTOs.PaidInvoiceInfo(uploadedBy, new Timestamp(System.currentTimeMillis()), invoiceID, invoiceDate, datePaid, invoiceTotal, amountPaid);
+            try{
+                this.fileUploadDao.insertPaidInvoiceData(paidInvoiceInfo);
+            }catch (Exception e){
+                fileUploadDao.deletePaidInvoiceDataFromBuffer(uploadedBy);
+                insertSuccess = false;
+            }
+
+        }
+        return insertSuccess;
+    }
+
 //    public List<DTOs.PaidInvoiceInfo> filterPaidInvoicesFromFile(Integer empID, MultipartFile file){
 //        List<DTOs.PaidInvoiceInfo> list = new ArrayList<>();
 //        if(processPaidInvoiceExcelFile(empID, file))
