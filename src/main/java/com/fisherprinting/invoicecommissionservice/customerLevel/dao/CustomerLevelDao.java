@@ -220,6 +220,8 @@ public class CustomerLevelDao {
         parameters.addValue("customerID", customerID);
 
         List<Map<String, Object>> rows = template.queryForList(sql, parameters);
+
+
         for (Map<String, Object> row : rows) {
             String mapKey = (String) row.get("mapKey");
             BigDecimal commRate = (BigDecimal) row.get("assignedRate");
@@ -451,12 +453,21 @@ public class CustomerLevelDao {
         parameters.addValue("taskID", taskID);
 
         List<Map<String, Object>> rows = template.queryForList(sql, parameters);
-        for (Map<String, Object> row : rows) {
-            BigDecimal assignedRate = (BigDecimal) row.get("assignedRate");
-            String assignedBy = (String) row.get("assignedBy");
-            String notes = (String) row.get("notes");
+
+        if(rows.isEmpty( )){
+            BigDecimal assignedRate = new BigDecimal(0);
+            String assignedBy = "N/A";
+            String notes = "N/A";
             taskRateInfo = new EmployeeTaskRateInfo(assignedRate, assignedBy, notes);
+        }else{
+            for (Map<String, Object> row : rows) {
+                BigDecimal assignedRate = (BigDecimal) row.get("assignedRate");
+                String assignedBy = (String) row.get("assignedBy");
+                String notes = (String) row.get("notes");
+                taskRateInfo = new EmployeeTaskRateInfo(assignedRate, assignedBy, notes);
+            }
         }
+
         return taskRateInfo;
     }
 
@@ -483,44 +494,21 @@ public class CustomerLevelDao {
         parameters.addValue("taskID", taskID);
 
         List<Map<String, Object>> rows = template.queryForList(sql, parameters);
-        for (Map<String, Object> row : rows) {
-            BigDecimal commRate = (BigDecimal) row.get("commRate");
-            String assignedBy = (String) row.get("assignedBy");
-            String notes = (String) row.get("notes");
+        if(rows.isEmpty( )){
+            BigDecimal commRate = new BigDecimal(0);
+            String assignedBy = "N/A";
+            String notes = "N/A";
             taskRateInfo = new TaskRateInfo(commRate, assignedBy, notes);
+        }else{
+            for (Map<String, Object> row : rows) {
+                BigDecimal commRate = (BigDecimal) row.get("commRate");
+                String assignedBy = (String) row.get("assignedBy");
+                String notes = (String) row.get("notes");
+                taskRateInfo = new TaskRateInfo(commRate, assignedBy, notes);
+            }
         }
+
+
         return taskRateInfo;
     }
-
-
-//    public void getCustomerLevelTaskRate(int invoiceID){
-//        TaskRateInfo taskRateInfo = null;
-//
-//        String sql = """
-//                    DECLARE @CUSTOMER_ID INT = :customerID
-//                    DECLARE @TASK_ID INT = :taskID
-//
-//
-//                    SELECT [commRate]
-//                          , employees.firstName + ' ' + employees.lastName as assignedBy
-//                          ,[notes]
-//                      FROM [intrafisher].[dbo].[InvComm_Config_CustomerLevel]
-//                        INNER JOIN employees ON employees.id = assignedBy
-//                      WHERE [customerID] = @CUSTOMER_ID
-//                        AND [taskID] = @TASK_ID
-//                    """;
-//
-//        MapSqlParameterSource parameters = new MapSqlParameterSource();
-//        parameters.addValue("customerID", customerID);
-//        parameters.addValue("taskID", taskID);
-//
-//        List<Map<String, Object>> rows = template.queryForList(sql, parameters);
-//        for (Map<String, Object> row : rows) {
-//            BigDecimal commRate = (BigDecimal) row.get("commRate");
-//            String assignedBy = (String) row.get("assignedBy");
-//            String notes = (String) row.get("notes");
-//            taskRateInfo = new TaskRateInfo(commRate, assignedBy, notes);
-//        }
-//        return taskRateInfo;
-//    }
 }

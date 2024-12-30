@@ -76,8 +76,8 @@ public class FileUploadController {
 
     // TODO-------------------------------------
     @PostMapping("/excelFile/parseRow")
-    public ResponseEntity<?> filterPaidInvoicesFromFile(@RequestBody List<DTOs.InvoiceRowData> invoiceRowData) throws ParseException {
-        int empID = 3667;
+    public ResponseEntity<?> filterPaidInvoicesFromFile(@RequestParam("empID") int empID, @RequestBody List<DTOs.InvoiceRowData> invoiceRowData) throws ParseException {
+//        int empID = 3667;
         if(fileUploadService.insertToBeFilteredPaidInvoiceData(empID, invoiceRowData)){
             List<DTOs.PaidInvoiceInfo> shortPaid = fileUploadService.removeDuplicates(fileUploadDao.getShortPaidInvoicesListFromBuffer(empID));
             List<DTOs.PaidInvoiceInfo> fullyPaid = fileUploadService.removeDuplicates(fileUploadDao.getFullyPaidInvoicesListFromBuffer(empID));

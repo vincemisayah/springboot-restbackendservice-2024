@@ -201,10 +201,16 @@ public class InvoiceLevelDao {
         parameters.addValue("empID", empID);
 
         List<Map<String, Object>> rows = template.queryForList(sql, parameters);
-        for (Map<String, Object> row : rows) {
-            BigDecimal assignedRate = (BigDecimal) row.get("assignedRate");
-            String notes = (String) row.get("notes");
+        if(rows.isEmpty( )){
+            BigDecimal assignedRate = new BigDecimal(0);
+            String notes = "N/A";
             taskRateInfo = new EmployeeTaskRateInfo(assignedRate, notes);
+        }else{
+            for (Map<String, Object> row : rows) {
+                BigDecimal assignedRate = (BigDecimal) row.get("assignedRate");
+                String notes = (String) row.get("notes");
+                taskRateInfo = new EmployeeTaskRateInfo(assignedRate, notes);
+            }
         }
         return taskRateInfo;
     }
@@ -232,12 +238,21 @@ public class InvoiceLevelDao {
         parameters.addValue("taskID", taskID);
 
         List<Map<String, Object>> rows = template.queryForList(sql, parameters);
-        for (Map<String, Object> row : rows) {
-            BigDecimal taskRate = (BigDecimal) row.get("taskRate");
-            String assignedBy = (String) row.get("assignedBy");
-            Boolean active = (Boolean) row.get("active");
-            String taskNote = (String) row.get("taskNote");
+
+        if(rows.isEmpty()){
+            BigDecimal taskRate = new BigDecimal(0);
+            String assignedBy = "N/A";
+            Boolean active = false;
+            String taskNote = "N/A";
             taskRateInfo = new TaskRateInfo(taskRate, assignedBy, active, taskNote);
+        }else{
+            for (Map<String, Object> row : rows) {
+                BigDecimal taskRate = (BigDecimal) row.get("taskRate");
+                String assignedBy = (String) row.get("assignedBy");
+                Boolean active = (Boolean) row.get("active");
+                String taskNote = (String) row.get("taskNote");
+                taskRateInfo = new TaskRateInfo(taskRate, assignedBy, active, taskNote);
+            }
         }
         return taskRateInfo;
     }

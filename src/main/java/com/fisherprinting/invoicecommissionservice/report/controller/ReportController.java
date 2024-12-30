@@ -84,9 +84,9 @@ public class ReportController {
                 "SalespersonAssignedInvoices", salespersonAssignedInvoices));
     }
 
-    @PostMapping("/viewSalespersonPdfReport/{empID}")
-    public ResponseEntity<?> viewSalespersonPdfReport(@PathVariable("empID") Integer empID, @RequestParam("invoiceList") List<Integer> invoiceIDList) throws ParseException {
-        InputStreamResource resource = new InputStreamResource(reportService.getSalespersonCommissionReport(empID, invoiceIDList));
+    @PostMapping("/viewSalespersonPdfReport")
+    public ResponseEntity<?> viewSalespersonPdfReport(@RequestParam("invoiceIDs") List<Integer> invoiceIDs,@RequestParam("empID") int empID) {
+        InputStreamResource resource = new InputStreamResource(reportService.getSalespersonCommissionReport(empID, invoiceIDs));
 
         String empName = reportDao.getEmployeeNameByID(empID).replaceAll(" ", "");
         String fileName = empName + "-CommissionReport.pdf";
