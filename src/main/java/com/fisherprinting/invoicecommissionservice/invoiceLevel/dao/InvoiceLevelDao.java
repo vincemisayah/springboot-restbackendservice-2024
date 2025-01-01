@@ -203,7 +203,7 @@ public class InvoiceLevelDao {
         List<Map<String, Object>> rows = template.queryForList(sql, parameters);
         if(rows.isEmpty( )){
             BigDecimal assignedRate = new BigDecimal(0);
-            String notes = "N/A";
+            String notes = "";
             taskRateInfo = new EmployeeTaskRateInfo(assignedRate, notes);
         }else{
             for (Map<String, Object> row : rows) {
@@ -241,9 +241,9 @@ public class InvoiceLevelDao {
 
         if(rows.isEmpty()){
             BigDecimal taskRate = new BigDecimal(0);
-            String assignedBy = "N/A";
+            String assignedBy = "";
             Boolean active = false;
-            String taskNote = "N/A";
+            String taskNote = "";
             taskRateInfo = new TaskRateInfo(taskRate, assignedBy, active, taskNote);
         }else{
             for (Map<String, Object> row : rows) {

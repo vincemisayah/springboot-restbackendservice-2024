@@ -109,6 +109,6 @@ public class SubcontractService {
                 salesPersonAssignedRate.setScale(2, RoundingMode.CEILING),
                 salesCommissionValue.setScale(2, RoundingMode.CEILING),
                 taskNotes,
-                salesNotes, "N/A");
+                salesNotes, "");
     }
 }
