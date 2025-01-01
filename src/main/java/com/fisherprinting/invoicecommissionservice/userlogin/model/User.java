@@ -15,6 +15,10 @@ public class User {
 
     @Setter
     @Getter
+    private String fullname;
+
+    @Setter
+    @Getter
     private String username;
 
     @Setter

@@ -25,4 +25,8 @@ public class MyUserDetailService implements UserDetailsService {
                 .password(userFound.getPassword())
                 .build();
     }
+
+    public User getUserByUserName(String userName) {
+        return userRepository.findByUserName(userName);
+    }
 }
