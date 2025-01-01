@@ -28,17 +28,21 @@ public class LoginController {
 
     @PostMapping("/authenticate")
     public ResponseEntity<?> authenticateAndGetToken(@RequestBody DTOs.LoginForm loginForm) {
-        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-                loginForm.username(), loginForm.password()
-        ));
+        ResponseEntity<?> response = null;
+        try{
+            Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+                    loginForm.username(), loginForm.password()
+            ));
 
-        if(authentication.isAuthenticated()) {
-            User user = myUserDetailService.getUserByUserName(loginForm.username());
-            return ResponseEntity.ok().body(Map.of("Fullname", user.getFullname(),
-                    "UserID", user.getId(),
-                    "GeneratedToken", jwtService.generateToken(myUserDetailService.loadUserByUsername(loginForm.username()))));
-        }else{
-            throw new UsernameNotFoundException("Invalid username or password");
+            if(authentication.isAuthenticated()) {
+                User user = myUserDetailService.getUserByUserName(loginForm.username());
+                response = ResponseEntity.ok().body(Map.of("Fullname", user.getFullname(),
+                        "UserID", user.getId(),
+                        "GeneratedToken", jwtService.generateToken(myUserDetailService.loadUserByUsername(loginForm.username()))));
+            }
+        }catch (Exception e){
+            response = ResponseEntity.notFound().build();
         }
+        return response;
     }
 }
