@@ -11,14 +11,14 @@ spring:
     #password: machines
 
     #Bridgeview
-    #url: jdbc:sqlserver://appserverdb:1433;databaseName=intrafisher;encrypt=true;trustServerCertificate=true;
-    #username: powers
-    #password: machines
+    url: jdbc:sqlserver://appserverdb:1433;databaseName=intrafisher;encrypt=true;trustServerCertificate=true;
+    username: powers
+    password: machines
 
     #dev1
-    url: jdbc:sqlserver://fisherdev2:1433;databaseName=intrafisher;encrypt=true;trustServerCertificate=true;
-    username: sa
-    password: Blu3=Marlin
+    #url: jdbc:sqlserver://fisherdev2:1433;databaseName=intrafisher;encrypt=true;trustServerCertificate=true;
+    #username: sa
+    #password: Blu3=Marlin
 
     #dev2
     #url: jdbc:sqlserver://fisherdev:1433;databaseName=intrafisher;encrypt=true;trustServerCertificate=true;

@@ -31,7 +31,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(registry -> {
                     registry.requestMatchers("/authenticate").permitAll();
-//                    registry.requestMatchers("/invoiceCommissionService/**").permitAll();
+                    registry.requestMatchers("/subcontract/v1/*").permitAll();
                     registry.anyRequest().authenticated();
                 })
                 .formLogin(AbstractAuthenticationFilterConfigurer::permitAll)
