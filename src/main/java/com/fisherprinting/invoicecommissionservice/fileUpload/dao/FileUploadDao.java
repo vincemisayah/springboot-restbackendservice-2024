@@ -22,15 +22,7 @@ public class FileUploadDao {
 
     public int insertPaidInvoiceData(DTOs.PaidInvoiceInfo paidInvoiceInfo) {
         String sql = """
-                    INSERT INTO [intrafisher].[dbo].[InvComm_toFilterPaidInvoicesBuffer]
-                          ([uploadedBy]
-                          ,[uploadDatetime]
-                          ,[invoiceID]
-                          ,[invoiceDate]
-                          ,[datePaid]
-                          ,[invoiceTotal]
-                          ,[amountPaid])
-                    VALUES(:uploadedBy, :uploadDatetime, :invoiceID,:invoiceDate, :datePaid, :invoiceTotal, :amountPaid)
+
                     """;
 
         MapSqlParameterSource parameters = new MapSqlParameterSource();
@@ -47,17 +39,7 @@ public class FileUploadDao {
     public List<DTOs.PaidInvoiceInfo> getShortPaidInvoicesListFromBuffer(int uploaderEmpID) {
         List<DTOs.PaidInvoiceInfo> list = new ArrayList<>();
         String sql = """
-                    SELECT [uploadedBy]
-                          ,[uploadDatetime]
-                          ,[invoiceID]
-                          ,[invoiceDate]
-                          ,[datePaid]
-                          ,[invoiceTotal]
-                          ,[amountPaid]
-                      FROM [intrafisher].[dbo].[InvComm_toFilterPaidInvoicesBuffer]
-                      WHERE ABS([invoiceTotal]) > ABS([amountPaid])
-                        AND [uploadedBy] = :uploaderEmpID
-                      ORDER BY invoiceDate
+
                     """;
 
         MapSqlParameterSource parameters = new MapSqlParameterSource();
@@ -82,17 +64,7 @@ public class FileUploadDao {
     public List<DTOs.PaidInvoiceInfo> getFullyPaidInvoicesListFromBuffer(int uploaderEmpID) {
         List<DTOs.PaidInvoiceInfo> list = new ArrayList<>();
         String sql = """
-                    SELECT [uploadedBy]
-                          ,[uploadDatetime]
-                          ,[invoiceID]
-                          ,[invoiceDate]
-                          ,[datePaid]
-                          ,[invoiceTotal]
-                          ,[amountPaid]
-                      FROM [intrafisher].[dbo].[InvComm_toFilterPaidInvoicesBuffer]
-                      WHERE ABS([invoiceTotal]) = ABS([amountPaid])
-                        AND [uploadedBy] = :uploaderEmpID
-                      ORDER BY invoiceDate
+
                     """;
 
         MapSqlParameterSource parameters = new MapSqlParameterSource();
@@ -117,17 +89,7 @@ public class FileUploadDao {
     public List<DTOs.PaidInvoiceInfo> getOverPaidInvoicesListFromBuffer(int uploaderEmpID) {
         List<DTOs.PaidInvoiceInfo> list = new ArrayList<>();
         String sql = """
-                    SELECT [uploadedBy]
-                          ,[uploadDatetime]
-                          ,[invoiceID]
-                          ,[invoiceDate]
-                          ,[datePaid]
-                          ,[invoiceTotal]
-                          ,[amountPaid]
-                      FROM [intrafisher].[dbo].[InvComm_toFilterPaidInvoicesBuffer]
-                      WHERE ABS([invoiceTotal]) < ABS([amountPaid])
-                        AND [uploadedBy] = :uploaderEmpID
-                      ORDER BY invoiceDate
+
                     """;
 
         MapSqlParameterSource parameters = new MapSqlParameterSource();
@@ -151,8 +113,7 @@ public class FileUploadDao {
 
     public int deletePaidInvoiceDataFromBuffer(int empID) {
         String sql = """
-                    DELETE FROM [intrafisher].[dbo].[InvComm_toFilterPaidInvoicesBuffer]
-                    WHERE uploadedBy = :empID
+
                     """;
 
         MapSqlParameterSource parameters = new MapSqlParameterSource();
@@ -163,18 +124,7 @@ public class FileUploadDao {
     public List<DTOs.InvoiceDup> invoiceDupListFromBuffer(int uploaderEmpID) {
         List<DTOs.InvoiceDup> list = new ArrayList<>();
         String sql = """
-                    SELECT [invoiceID], invoiceCount
-                    FROM (
-                        SELECT
-                            [invoiceID],
-                            COUNT([invoiceID]) as invoiceCount
-                        FROM [intrafisher].[dbo].[InvComm_toFilterPaidInvoicesBuffer]
-                        WHERE ABS([invoiceTotal]) = ABS([amountPaid])
-                            and uploadedBy = :uploaderEmpID
-                        GROUP BY [invoiceID]
-                    ) AS T1
-                    WHERE invoiceCount > 1
-                    ORDER BY [invoiceID]
+
                     """;
 
         MapSqlParameterSource parameters = new MapSqlParameterSource();
@@ -196,44 +146,7 @@ public class FileUploadDao {
     public int saveInvoiceData(DTOs.PaidInvoiceInfo invoiceData) throws DataAccessException {
         int rowsAffected = 0;
         String sql = """
-                    DECLARE @invoiceID INT = :invoiceID
-                    DECLARE @invoiceDate DATE = :invoiceDate
-                    DECLARE @datePaid DATE = :datePaid
-                    DECLARE @invoiceTotal DECIMAL(18,2) = :invoiceTotal
-                    DECLARE @amountPaid DECIMAL(18,2) = :amountPaid
-                    DECLARE @uploadDatetime DATETIME = :uploadDatetime
-                    DECLARE @uploadedBy INT = :uploadedBy
-                    
-                    
-                    DECLARE @INVOICE_EXIST INT = 0
-                    SET @INVOICE_EXIST = (SELECT COUNT(*)
-                                            FROM [intrafisher].[dbo].[InvComm_RecordsFullyPaidInvoices]
-                                            WHERE [invoiceID] = @invoiceID)
-                    
-                    IF(@INVOICE_EXIST > 0)
-                        BEGIN
-                            UPDATE [intrafisher].[dbo].[InvComm_RecordsFullyPaidInvoices]
-                            SET   [invoiceDate] = @invoiceDate,
-                                  [datePaid] = @datePaid,
-                                  [invoiceTotal] = @invoiceTotal,
-                                  [amountPaid] = @amountPaid,
-                                  [uploadDatetime] = @uploadDatetime,
-                                  [uploadedBy] = @uploadedBy
-                            WHERE [invoiceID] = @invoiceID
-                        END
-                    ELSE
-                        BEGIN
-                            INSERT INTO [intrafisher].[dbo].[InvComm_RecordsFullyPaidInvoices]
-                                      ([invoiceID]
-                                      ,[invoiceDate]
-                                      ,[datePaid]
-                                      ,[invoiceTotal]
-                                      ,[amountPaid]
-                                      ,[uploadDatetime]
-                                      ,[uploadedBy])
-                            VALUES(@invoiceID, @invoiceDate, @datePaid, @invoiceTotal,
-                                   @amountPaid, @uploadDatetime,@uploadedBy)
-                        END
+
                     """;
 
         MapSqlParameterSource parameters = new MapSqlParameterSource();
@@ -252,11 +165,7 @@ public class FileUploadDao {
     public Boolean invoiceFound(int invoiceID) {
         List<DTOs.InvoiceDup> list = new ArrayList<>();
         String sql = """
-                    DECLARE @INVOICE_ID INT = :invoiceID
-                    
-                    SELECT COUNT(*) as invoiceCount
-                    FROM invoices
-                    WHERE id = @INVOICE_ID
+
                     """;
 
         MapSqlParameterSource parameters = new MapSqlParameterSource();
