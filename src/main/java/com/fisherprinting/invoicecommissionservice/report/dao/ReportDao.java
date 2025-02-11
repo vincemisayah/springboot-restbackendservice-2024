@@ -44,23 +44,7 @@ public class ReportDao {
 
     public BigDecimal getInvoiceTotal(int invoiceID) throws DataAccessException {
         String sql = """
-                    DECLARE @invoiceId as int = :invoiceID
-                      \s
-                    SELECT
-                        SUM(
-                            CASE
-                                WHEN t1.unitName = '%'
-                                    THEN CONVERT(decimal(18,2),([quantity] * cost)/100, 2)
-                                WHEN t1.chargePerM > 0 OR t1.unitName like '%PM%'
-                                    THEN CONVERT(decimal(18,2),([quantity] * cost)/1000, 2)
-                                    ELSE CONVERT(decimal(18,2),([quantity] * cost), 2)
-                            END
-                        ) as invoiceTotal
-                    FROM [intrafisher].[dbo].[invoiceItems]
-                        INNER JOIN [intrafisher].[dbo].[invTasks] as t1 on [task] = t1.id
-                        INNER JOIN [intrafisher].[dbo].[invDepts] as t2 on t1.dept = t2.id
-                                       \s
-                    WHERE [invoice] = @invoiceId
+
                     """;
 
         MapSqlParameterSource parameters = new MapSqlParameterSource();
@@ -77,16 +61,7 @@ public class ReportDao {
     public DataTransferObjectsContainer.InvoiceInfo getInvoiceInfo(int invoiceID) throws DataAccessException {
         List<DataTransferObjectsContainer.InvoiceInfo> list = new ArrayList<>();
         String sql = """
-                    DECLARE @INVOICE_ID INT = :invoiceID
-                    
-                    SELECT customers.ARnumber as customerAR,
-                           customers.id as customerId,
-                           customers.name as customerName,
-                           CONVERT(date, [date]) as invoiceDate,
-                           CONVERT(date, [paymentDueDate]) as paymentDueDate
-                    FROM [intrafisher].[dbo].[invoices]
-                        INNER JOIN customers on invoices.customer = customers.id
-                    WHERE [invoices].[id] = @INVOICE_ID
+
                     """;
 
         MapSqlParameterSource parameters = new MapSqlParameterSource();
@@ -119,20 +94,7 @@ public class ReportDao {
 
         List<DTOs.PaidInvoiceInfo> list = new ArrayList<>();
         String sql = """
-                    DECLARE @START_DATE DATE = :formattedStartDate
-                    DECLARE @END_DATE DATE = :formattedEndDate
-                    
-                    SELECT [id]
-                          ,[invoiceID]
-                          ,[invoiceDate]
-                          ,[datePaid]
-                          ,[invoiceTotal]
-                          ,[amountPaid]
-                          ,[uploadDatetime]
-                          ,[uploadedBy]
-                      FROM [intrafisher].[dbo].[InvComm_RecordsFullyPaidInvoices]
-                      WHERE @START_DATE <= [invoiceDate] AND [invoiceDate] <= @END_DATE
-                      ORDER BY [invoiceDate]
+
                     """;
 
         MapSqlParameterSource parameters = new MapSqlParameterSource();
@@ -163,26 +125,7 @@ public class ReportDao {
 
         List<DTOs.PaidInvoiceInfo> list = new ArrayList<>();
         String sql = """
-                    DECLARE @SALES_EMP_ID INT = :empID
-                    DECLARE @START_DATE DATE = :formattedStartDate
-                    DECLARE @END_DATE DATE = :formattedEndDate
-                    
-                    SELECT [invoiceID]
-                          ,[invoiceDate]
-                          ,[datePaid]
-                          ,[invoiceTotal]
-                          ,[amountPaid]
-                          ,[uploadDatetime]
-                          ,[uploadedBy]
-                    FROM [intrafisher].[dbo].[InvComm_RecordsFullyPaidInvoices] as T1
-                        INNER JOIN invoices T2 on T1.invoiceID = T2.id
-                        INNER JOIN jobs T3 on T2.job = T3.id
-                        INNER JOIN customers T4 on T4.id = T3.customerID
-                    WHERE @START_DATE <= [invoiceDate] AND [invoiceDate] <= @END_DATE
-                        AND  ([salesman] = @SALES_EMP_ID
-                           OR [salesperson2] = @SALES_EMP_ID
-                           OR [salesperson3] = @SALES_EMP_ID
-                           OR [salesperson4] = @SALES_EMP_ID)
+
                     """;
 
         MapSqlParameterSource parameters = new MapSqlParameterSource();
@@ -209,9 +152,7 @@ public class ReportDao {
     public String getEmployeeNameByID(int empID) throws DataAccessException {
         List<DataTransferObjectsContainer.InvoiceInfo> list = new ArrayList<>();
         String sql = """
-                    SELECT firstName + ' ' + lastName
-                    FROM [intrafisher].[dbo].[employees]
-                    WHERE [employees].[id] = :empID
+
                     """;
 
         MapSqlParameterSource parameters = new MapSqlParameterSource();
