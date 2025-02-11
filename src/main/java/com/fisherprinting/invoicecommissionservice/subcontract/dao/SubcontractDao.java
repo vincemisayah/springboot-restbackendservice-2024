@@ -27,31 +27,7 @@ public class SubcontractDao {
         List<DTOs.InvoiceChargedTaskItem> list = new ArrayList<DTOs.InvoiceChargedTaskItem>( );
 
         String sql = """
-                    DECLARE @JOB_ID as int = :jobID
-                    
-                    SELECT\s
-                        [invoice], [order],
-                        t2.id as deptId,
-                        t2.name as deptName,
-                        [task] as taskId,
-                        t1.name as taskName,
-                        [desc] as description,\s
-                        [quantity] as qty,\s
-                        CONVERT(decimal(18,2),[cost], 2) as cost,\s
-                        -- Determines the amount based on 'per thousand' or '%'
-                        CASE\s
-                            WHEN t1.unitName = '%'\s
-                                THEN CONVERT(decimal(18,2),([quantity] * cost)/100, 2)\s
-                            WHEN t1.chargePerM > 0 OR t1.unitName like '%PM%'\s
-                                THEN CONVERT(decimal(18,2),([quantity] * cost)/1000, 2)\s
-                                ELSE CONVERT(decimal(18,2),([quantity] * cost), 2)\s
-                        END as amount
-                    FROM [intrafisher].[dbo].[invoiceItems]\s
-                        INNER JOIN [intrafisher].[dbo].[invTasks] as t1 on [task] = t1.id\s
-                        INNER JOIN [intrafisher].[dbo].[invDepts] as t2 on t1.dept = t2.id\s
-                    
-                    WHERE [invoice] IN (SELECT id from invoices WHERE job = @JOB_ID)
-                    ORDER BY [invoice], [order] ASC
+
                     """;
 
         MapSqlParameterSource parameters = new MapSqlParameterSource();
@@ -81,16 +57,7 @@ public class SubcontractDao {
         int rowsAffected = 0;
 
         String sql = """
-                    DECLARE @PO_ITEM_ID INT = :poItemID
-                    DECLARE @JOB_ID INT = :jobID
-                    DECLARE @INVOICE_ID INT = :invoiceID
-                    DECLARE @TASK_ID INT = :taskID
-                    
-                    UPDATE [intrafisher].[dbo].[PURCH_purchaseOrderItems]
-                    SET [jobId] = @JOB_ID,
-                        invoiceID = @INVOICE_ID,\s
-                        [taskID] = @TASK_ID
-                    WHERE [id] = @PO_ITEM_ID
+
                     """;
 
         MapSqlParameterSource parameters = new MapSqlParameterSource();
@@ -108,14 +75,7 @@ public class SubcontractDao {
         List<DTOs.PoItem> list = new ArrayList<DTOs.PoItem>( );
 
         String sql = """
-                    DECLARE @PO_ITEM_ID INT = :purchaseOrderItemID
-                    
-                    SELECT [poId]
-                          ,[jobId]
-                          ,[invoiceID]
-                          ,[taskID]
-                    FROM [intrafisher].[dbo].[PURCH_purchaseOrderItems]
-                    WHERE [id] = @PO_ITEM_ID
+
                     """;
 
         MapSqlParameterSource parameters = new MapSqlParameterSource();
@@ -135,13 +95,7 @@ public class SubcontractDao {
 
     public Boolean invoiceIsLinkedToPO(int invoiceID, int taskID) throws DataAccessException {
         String sql = """
-                    DECLARE @INVOICE_ID INT = :invoiceID               \s
-                    DECLARE @TASK_ID INT = :taskID
-                    
-                    SELECT COUNT(*) poItemCount
-                    FROM [intrafisher].[dbo].[PURCH_purchaseOrderItems]
-                    WHERE invoiceID = @INVOICE_ID
-                        AND [taskID] = @TASK_ID
+
                     """;
 
         MapSqlParameterSource parameters = new MapSqlParameterSource();
@@ -157,13 +111,7 @@ public class SubcontractDao {
 
     public BigDecimal invoiceTaskIdPurchaseOrderItemPrice(int invoiceID, int taskID) throws DataAccessException {
         String sql = """
-                    DECLARE @INVOICE_ID INT = :invoiceID
-                    DECLARE @TASK_ID INT = :taskID
-                    
-                    SELECT [amount]
-                    FROM [intrafisher].[dbo].[PURCH_purchaseOrderItems]
-                    WHERE invoiceID = @INVOICE_ID
-                        AND taskID = @TASK_ID
+
                     """;
 
         MapSqlParameterSource parameters = new MapSqlParameterSource();
@@ -179,22 +127,7 @@ public class SubcontractDao {
 
     public BigDecimal getSummedInvoiceTaskIdsAmount(int invoiceID, int taskID) throws DataAccessException {
         String sql = """
-                    DECLARE @INVOICE_ID as int = :invoiceID
-                    DECLARE @TASK_ID as int = :taskID
-                    
-                    SELECT
-                        SUM(CASE
-                                WHEN t1.unitName = '%'
-                                    THEN CONVERT(decimal(18,2),([quantity] * cost)/100, 2)
-                                WHEN t1.chargePerM > 0 OR t1.unitName like '%PM%'
-                                    THEN CONVERT(decimal(18,2),([quantity] * cost)/1000, 2)
-                                    ELSE CONVERT(decimal(18,2),([quantity] * cost), 2)
-                            END) as taskTotalAmount
-                    FROM [intrafisher].[dbo].[invoiceItems]
-                        INNER JOIN [intrafisher].[dbo].[invTasks] as t1 on [task] = t1.id
-                        INNER JOIN [intrafisher].[dbo].[invDepts] as t2 on t1.dept = t2.id
-                    WHERE [invoice] = @INVOICE_ID
-                        AND [task] = @TASK_ID
+
                     """;
 
         MapSqlParameterSource parameters = new MapSqlParameterSource();
