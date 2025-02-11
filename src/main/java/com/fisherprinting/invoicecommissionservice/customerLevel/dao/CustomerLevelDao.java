@@ -25,19 +25,7 @@ public class CustomerLevelDao {
         CustomerInfo ci = null;
 
         String sql = """
-                DECLARE @customerId INT = :customerID
-                
-                SELECT
-                	 [id] ,[ARnumber] ,[name]
-                	,[salesman] s1Id, [salesperson2] s2Id, [salesperson3] s3Id, [salesperson4] s4Id
-                	,(SELECT lastName + ', ' + firstName FROM employees where id = [salesman])     as s1Name
-                	,(SELECT lastName + ', ' + firstName FROM employees where id = [salesperson2]) as s2Name
-                	,(SELECT lastName + ', ' + firstName FROM employees where id = [salesperson3]) as s3Name
-                	,(SELECT lastName + ', ' + firstName FROM employees where id = [salesperson4]) as s4Name
-                FROM
-                	[intrafisher].[dbo].[customers]
-                WHERE
-                	id = @customerId
+
                 """;
 
         MapSqlParameterSource parameters = new MapSqlParameterSource();
@@ -82,14 +70,7 @@ public class CustomerLevelDao {
         List<CustomerInfo> list = new ArrayList<CustomerInfo>( );
 
         String sql = """
-                DECLARE @AR_NUMBER VARCHAR(25) = :arNumber
-                DECLARE @CUSTOMER_STATUS_ACTIVE INT = 10
-                SELECT TOP(200)  [id] as customerId
-                FROM customers
-                WHERE
-                		[ARnumber] LIKE TRIM(@AR_NUMBER) + '%'
-                		AND [status] = @CUSTOMER_STATUS_ACTIVE
-                ORDER BY [ARnumber] ASC""";
+            """;
 
         MapSqlParameterSource parameters = new MapSqlParameterSource();
         parameters.addValue("arNumber", arNumber);
@@ -108,13 +89,7 @@ public class CustomerLevelDao {
         List<TaskDepartment> list = new ArrayList<>( );
 
         String sql = """
-                SELECT DISTINCT
-                    T2.id as id,
-                    T2.name as department
-                FROM [intrafisher].[dbo].[invTasks] as T1
-                    INNER JOIN [intrafisher].[dbo].[invDepts] as T2 on T1.dept = T2.id
-                WHERE isActive <> 0
-                ORDER BY T2.name ASC""";
+            """;
 
         MapSqlParameterSource parameters = new MapSqlParameterSource();
 
@@ -134,19 +109,7 @@ public class CustomerLevelDao {
         List<InvoiceTaskItem> list = new ArrayList<>( );
 
         String sql = """
-                    SELECT 
-                        T1.id as id,
-                        T2.id as deptId,
-                        T2.name as department,
-                        T1.name as taskName,
-                        CASE
-                            WHEN LEN(T1.defaultDescription) < 1 OR T1.defaultDescription IS NULL THEN 'N/A'
-                            ELSE T1.defaultDescription
-                        END as description
-                    FROM [intrafisher].[dbo].[invTasks] as T1
-                        INNER JOIN [intrafisher].[dbo].[invDepts] as T2 on T1.dept = T2.id
-                    WHERE isActive <> 0
-                    ORDER BY T2.name, T1.name ASC
+
                 """;
 
         MapSqlParameterSource parameters = new MapSqlParameterSource();
@@ -237,30 +200,6 @@ public class CustomerLevelDao {
     public int updateInsertCustomerTaskConfig(int customerID, int taskID, int assignedBy, BigDecimal commRate, String notes) throws DataAccessException{
         int numberOfRowsAffected = 0;
         String sql = """
-                    DECLARE @CUSTOMER_ID INT = :customerID
-                    DECLARE @TASK_ID INT = :taskID
-                    DECLARE @ASSIGNED_BY INT = :assignedBy
-                    DECLARE @COMM_RATE DECIMAL(18,2) = :commRate
-                    DECLARE @NOTES VARCHAR(250) = :notes
-                    
-                    DECLARE @CONFIG_EXIST INT = 0
-                    SET @CONFIG_EXIST = (SELECT COUNT(*) FROM [intrafisher].[dbo].[InvComm_Config_CustomerLevel] WHERE [customerID] = @CUSTOMER_ID AND [taskID] = @TASK_ID)
-                    
-                    
-                    IF(@CONFIG_EXIST > 0)
-                        BEGIN
-                            UPDATE [intrafisher].[dbo].[InvComm_Config_CustomerLevel]
-                            SET [commRate] = @COMM_RATE,
-                                [assignedBy] = @ASSIGNED_BY,
-                                [notes] = @NOTES
-                            WHERE [customerID] = @CUSTOMER_ID AND [taskID] = @TASK_ID
-                        END
-                    ELSE
-                        BEGIN
-                            INSERT INTO [intrafisher].[dbo].[InvComm_Config_CustomerLevel]
-                                        ([customerID],[taskID],[commRate],[assignedBy],[notes])
-                            VALUES(@CUSTOMER_ID, @TASK_ID, @COMM_RATE, @ASSIGNED_BY, @NOTES)
-                        END
                     """;
 
         MapSqlParameterSource parameters = new MapSqlParameterSource();
@@ -278,37 +217,7 @@ public class CustomerLevelDao {
     public int updateInsertSalespersonConfig(int customerID, int empID, int taskID, BigDecimal assignedRate, int assignedBy, String notes) throws DataAccessException {
         int numberOfRowsAffected = 0;
         String sql = """
-                    DECLARE @CUSTOMER_ID INT = :customerID
-                    DECLARE @EMP_ID INT = :empID
-                    DECLARE @TASK_ID INT = :taskID
-                    
-                    DECLARE @ASSIGNED_RATE INT = :assignedRate
-                    DECLARE @ASSIGNED_BY INT = :assignedBy
-                    DECLARE @NOTES VARCHAR(150) = :notes
-                    
-                    DECLARE @CONFIG_EXIST INT = 0
-                    SET @CONFIG_EXIST = (SELECT COUNT(*)\s
-                        FROM [intrafisher].[dbo].[InvComm_EmpAssignedRates_CustomerLevel]\s
-                        WHERE [customerID] = @CUSTOMER_ID
-                        AND [empID] = @EMP_ID
-                        AND [taskID] = @TASK_ID)
-                    
-                    IF(@CONFIG_EXIST > 0)
-                        BEGIN
-                            UPDATE [intrafisher].[dbo].[InvComm_EmpAssignedRates_CustomerLevel]\s
-                            SET [assignedRate] = @ASSIGNED_RATE,
-                                [assignedBy] = @ASSIGNED_BY,
-                                [notes] = @NOTES
-                            WHERE [customerID] = @CUSTOMER_ID
-                                AND [empID] = @EMP_ID
-                                AND [taskID] = @TASK_ID
-                        END
-                    ELSE
-                        BEGIN
-                            INSERT INTO [intrafisher].[dbo].[InvComm_EmpAssignedRates_CustomerLevel]\s
-                                ([customerID],[empID],[taskID],[assignedRate],[assignedBy],[notes])
-                            VALUES(@CUSTOMER_ID, @EMP_ID, @TASK_ID, @ASSIGNED_RATE, @ASSIGNED_BY, @NOTES)
-                        END
+
                     """;
 
         MapSqlParameterSource parameters = new MapSqlParameterSource();
@@ -339,31 +248,7 @@ public class CustomerLevelDao {
         List<InvoiceChargedTaskItem> list = new ArrayList<InvoiceChargedTaskItem>( );
 
         String sql = """
-                    DECLARE @invoiceId as int = :invoiceId
 
-                    SELECT
-                        [order],
-                        t2.id as deptId,
-                        t2.name as deptName,
-                        [task] as taskId,
-                        t1.name as taskName,
-                        [desc] as description,
-                        [quantity] as qty,
-                        CONVERT(decimal(18,2),[cost], 2) as cost,
-                        -- Determines the amount based on 'per thousand' or '%'
-                        CASE
-                            WHEN t1.unitName = '%'
-                                THEN CONVERT(decimal(18,2),([quantity] * cost)/100, 2)
-                            WHEN t1.chargePerM > 0 OR t1.unitName like '%PM%'
-                                THEN CONVERT(decimal(18,2),([quantity] * cost)/1000, 2)
-                                ELSE CONVERT(decimal(18,2),([quantity] * cost), 2)
-                        END as amount
-                    FROM [intrafisher].[dbo].[invoiceItems]
-                        INNER JOIN [intrafisher].[dbo].[invTasks] as t1 on [task] = t1.id
-                        INNER JOIN [intrafisher].[dbo].[invDepts] as t2 on t1.dept = t2.id
-                    
-                    WHERE [invoice] = @invoiceId
-                    ORDER BY [order] ASC
                     """;
 
         MapSqlParameterSource parameters = new MapSqlParameterSource();
@@ -396,19 +281,6 @@ public class CustomerLevelDao {
         CustomerAndJobInfo customerAndJobInfo = null;
 
         String sql = """
-                    DECLARE @invoiceId int = :invoiceID
-                    
-                    SELECT
-                        customer as customerId,
-                        t3.ARnumber,
-                        t3.name as customerName,
-                        job as jobId,
-                        t2.name as jobName,
-                        t1.id as invoiceId
-                    FROM [intrafisher].[dbo].[invoices] as t1
-                        INNER JOIN jobs as t2 on t1.job = t2.id
-                        INNER JOIN customers as t3 on t1.customer = t3.id
-                    WHERE t1.id = @invoiceId
                     """;
 
         MapSqlParameterSource parameters = new MapSqlParameterSource();
@@ -433,18 +305,7 @@ public class CustomerLevelDao {
         EmployeeTaskRateInfo taskRateInfo = null;
 
         String sql = """
-                    DECLARE @CUSTOMER_ID INT = :customerID
-                    DECLARE @EMP_ID INT = :empID
-                    DECLARE @TASK_ID INT = :taskID
-                    
-                    SELECT [assignedRate]
-                          ,employees.firstName + ' ' + employees.lastName as assignedBy
-                          ,[notes]
-                      FROM [intrafisher].[dbo].[InvComm_EmpAssignedRates_CustomerLevel]
-                        INNER JOIN employees ON employees.id = assignedBy
-                      WHERE [customerID] = @CUSTOMER_ID
-                        AND [taskID] = @TASK_ID
-                        AND [empID] = @EMP_ID
+
                     """;
 
         MapSqlParameterSource parameters = new MapSqlParameterSource();
@@ -476,17 +337,7 @@ public class CustomerLevelDao {
         TaskRateInfo taskRateInfo = null;
 
         String sql = """
-                    DECLARE @CUSTOMER_ID INT = :customerID
-                    DECLARE @TASK_ID INT = :taskID
-                    
-                    
-                    SELECT [commRate]
-                          , employees.firstName + ' ' + employees.lastName as assignedBy
-                          ,[notes]
-                      FROM [intrafisher].[dbo].[InvComm_Config_CustomerLevel]
-                        INNER JOIN employees ON employees.id = assignedBy
-                      WHERE [customerID] = @CUSTOMER_ID
-                        AND [taskID] = @TASK_ID
+
                     """;
 
         MapSqlParameterSource parameters = new MapSqlParameterSource();
